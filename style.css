@@ -1,0 +1,206 @@
+@import url('https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Delius&family=Fuzzy+Bubbles:wght@400;700&family=Open+Sans:ital,wdth,wght@0,75..100,300..800;1,75..100,300..800&display=swap');
+
+:root{
+  --font1: "Delius", cursive;
+}
+
+*{
+  padding: 0;
+  margin: 0;
+  font-family: var(--font1);
+}
+
+body{
+  background-image: url(images/bg.png);
+  background-repeat: no-repeat;
+}
+
+a{
+  text-decoration: none;
+}
+
+.logo-top{
+  margin-top: 30px;
+  justify-self: center;
+}
+
+.logo-top img{
+  width: 120px;
+  border-radius: 50%;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+}
+
+.store-info{
+  text-align: center;
+  margin-top: 10PX;
+  color: white;
+  text-shadow: 0px 0px 5px black;
+}
+
+.store-info h1{
+  font-size: 1.5em;
+}
+
+.store-info h2{
+  font-size: 1em;
+  margin-top: 10px;
+}
+
+.social-medias{
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;;
+}
+
+.social-medias img{
+  margin: 5px;
+  width: 35px;
+  transition: all 0.2s ease-in-out;
+  filter: invert(1);
+}
+
+.social-medias img:hover{
+  scale: 1.07;
+}
+
+.buttons{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+#cat span, #chat span{
+  font-family: var(--font1);
+}
+
+.custom-button{
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.267);
+  font-size: 22px;
+  padding: 10px;
+  margin-top: 20px;
+  width: 60vw;
+  max-width: 600px;
+  min-width: 350px;
+  height: auto;
+  background-color: rgb(224, 215, 204);
+  border-radius: 20px;
+  transition: all 0.2s ease-in-out;
+  font-weight: bolder;
+  color: #292015;
+  box-shadow: 5px 5px 0px #634e33;
+  border: 2px solid #634e33;
+}
+
+#uber svg{
+  width: 30px;
+  margin-bottom: -9px;
+}
+
+#cat svg{
+  width: 30px;
+  margin-bottom: -3px;
+}
+
+#chat svg{
+  width: 30px;
+  margin-bottom: -7px;
+}
+
+.map-info{
+  display: flex;
+  flex-direction: row;
+}
+
+.custom-button:hover{
+  scale: 1.02;
+}
+
+#map-box{
+  overflow: hidden;
+}
+
+.map-img-container{
+  width: 100%;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+#map-box img{
+  width: 100%;
+  border-radius: 10px;
+}
+
+#map-box h5{
+  margin-top: 30px;
+  text-align: left;
+}
+
+#map-box p{
+  font-size: small;
+  text-align: left;
+  margin-top: 5px;
+  margin-right: 105px;
+  margin-bottom: 20px;
+}
+
+#map-box span{
+  display: flex;
+  justify-content: center;
+  justify-self: center;
+  align-items: center;
+  background-color: #4b3b26;
+  border: solid 1px #292015;
+  width: 120px;
+  height: 40px;
+  border-radius: 20px;
+  color: white;
+}
+
+footer{
+  text-align: center;
+  margin: 25px;
+  color: white;
+  opacity: 15%;
+  text-decoration: none;
+}
+
+@media (max-width: 600px){
+  #map-box span{
+    width: 150px;
+    height: 30px;
+    font-size: 16px;
+  }
+
+  #map-box p{
+    font-size: 11px;
+    margin-right: 10px;
+  }
+
+  #map-box img{
+    transform: scale(1.5);
+  }
+
+  #cat span, #chat span, #uber span{
+    font-size: 0.8em;
+  }
+
+  #uber svg{
+    width: 25px;
+    margin-bottom: -7px;
+  }
+
+  #cat svg{
+    width: 25px;
+    margin-bottom: -4px;
+}
+
+  #chat svg{
+    width: 25px;
+    margin-bottom: -5px;
+  }
+
+  footer{
+    font-size: 0.7em;
+  }
+}
