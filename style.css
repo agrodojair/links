@@ -21,6 +21,7 @@ a{
 }
 
 .logo-top{
+  display: block;
   margin-top: 30px;
   justify-self: center;
 }
@@ -108,6 +109,11 @@ a{
   margin-bottom: -7px;
 }
 
+#avalie svg{
+  width: 30px;
+  margin-bottom: -8px;
+}
+
 .map-info{
   display: flex;
   flex-direction: row;
@@ -182,7 +188,7 @@ footer{
     transform: scale(1.5);
   }
 
-  #cat span, #chat span, #uber span{
+  #cat span, #chat span, #uber span, #avalie span{
     font-size: 0.8em;
   }
 
@@ -200,6 +206,11 @@ footer{
     width: 25px;
     margin-bottom: -5px;
   }
+
+  #avalie svg{
+  width: 25px;
+  margin-bottom: -5px;
+}
 
   footer{
     font-size: 0.7em;
