@@ -5,9 +5,14 @@
 }
 
 *{
+  user-select: none;
   padding: 0;
   margin: 0;
   font-family: var(--font1);
+}
+
+img{
+  pointer-events: none;
 }
 
 body{
@@ -85,14 +90,100 @@ a{
   width: 60vw;
   max-width: 600px;
   min-width: 350px;
+  height: 30px;
+  background-color: rgb(224, 215, 204);
+  border-radius: 20px;
+  transition: all 0.2s ease-in-out;
+  font-weight: bolder;
+  color: #292015;
+}
+
+.custom-button:hover{
+  font-size: 24px;
+}
+
+.custom-button::after{
+  border-radius: 20px;
+  margin-top: -14px;
+  content: '';
+  position: absolute;
+  height: 0px;
+  width: 0vw;
+  background-color: transparent;
+  left: 50%;
+  translate: -50%;
+  z-index: -1;
+  transition: all 0.3s ease-in-out;
+}
+
+@property --angle{
+ syntax: "<angle>";
+ initial-value: 0deg;
+ inherits: false;
+}
+
+
+.custom-button:hover::after{
+  height: 30px;
+  width: 60vw;
+  max-width: 600px;
+  min-width: 350px;
+  padding: 14px;
+  background-image: conic-gradient(from var(--angle), transparent 5%, rgb(140, 209, 13));
+  animation: 2s girar linear infinite;
+  box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.404);
+}
+
+@keyframes girar{
+  from{
+    --angle: 0deg
+  }
+  to{
+    --angle: 360deg
+  }
+}
+
+.map-box{
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.267);
+  font-size: 22px;
+  padding: 10px;
+  margin-top: 20px;
+  width: 60vw;
+  max-width: 600px;
+  min-width: 350px;
   height: auto;
   background-color: rgb(224, 215, 204);
   border-radius: 20px;
   transition: all 0.2s ease-in-out;
   font-weight: bolder;
   color: #292015;
-  box-shadow: 5px 5px 0px #634e33;
-  border: 2px solid #634e33;
+}
+
+.map-box::after{
+  margin-top: -296px;
+  content: '';
+  position: absolute;
+  width: 0vw;
+  max-width: 0px;
+  min-width: 0px;
+  height: 0px;
+  left: 50%;
+  translate: -50%;
+  padding: 14px;
+  border-radius: 20px;
+  background-color: transparent;
+  z-index: -1;
+  transition: all 0.3s ease-in-out;
+}
+
+.map-box:hover::after{
+  width: 60vw;
+  max-width: 600px;
+  min-width: 350px;
+  height: 282px;
+  background-image: conic-gradient(from var(--angle), transparent 5%, rgb(166, 255, 0));
+  animation: 2s girar linear infinite;
+  box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.404);
 }
 
 #uber svg{
@@ -118,10 +209,6 @@ a{
 .map-info{
   display: flex;
   flex-direction: row;
-}
-
-.custom-button:hover{
-  scale: 1.02;
 }
 
 #map-box{
@@ -209,11 +296,38 @@ footer{
   }
 
   #avalie svg{
-  width: 25px;
-  margin-bottom: -5px;
+    width: 25px;
+    margin-bottom: -5px;
 }
 
   footer{
     font-size: 0.7em;
   }
+
+  .map-box::after{
+    margin-top: -234.5px;
+    content: '';
+    position: absolute;
+    width: 0vw;
+    max-width: 0px;
+    min-width: 0px;
+    height: 0px;
+    left: 50%;
+    translate: -50%;
+    padding: 14px;
+    border-radius: 20px;
+    background-color: transparent;
+    z-index: -1;
+    transition: all 0.3s ease-in-out;
+}
+
+  .map-box:hover::after{
+    width: 60vw;
+    max-width: 600px;
+    min-width: 350px;
+    height: 220px;
+    background-image: conic-gradient(from var(--angle), transparent 5%, rgb(166, 255, 0));
+    animation: 2s girar linear infinite;
+    box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.404);
+}
 }
