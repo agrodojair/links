@@ -57,9 +57,9 @@ a{
 
 .social-medias img{
   margin: 5px;
-  width: 35px;
+  width: 45px;
   transition: all 0.2s ease-in-out;
-  filter: invert(1);
+  filter: invert(0);
 }
 
 .social-medias img:hover{
