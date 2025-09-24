@@ -10,12 +10,6 @@
   font-family: var(--font1);
 }
 
-body{
-  background-image: url(images/bg-2.png);
-  background-repeat: no-repeat;
-  background-size: cover;
-}
-
 #myVideo {
   filter: blur(5px);
   position: fixed;
