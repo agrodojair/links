@@ -1,7 +1,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Delius&family=Fuzzy+Bubbles:wght@400;700&family=Open+Sans:ital,wdth,wght@0,75..100,300..800;1,75..100,300..800&display=swap');
 
+@font-face {
+  font-family: "tommy-light";
+  src: url(fonts/tommy-light.otf);
+}
+
+@font-face {
+  font-family: "tommy-regular";
+  src: url(fonts/tommy-regular.otf);
+}
+
 :root{
-  --font1: "Delius", cursive;
+  --font1: "tommy-light", sans;
+  --font2: "tommy-regular", sans;
 }
 
 *{
@@ -49,6 +60,7 @@ a{
 
 .store-info h1{
   font-size: 1.5em;
+  font-family: var(--font2);
 }
 
 .store-info h2{
