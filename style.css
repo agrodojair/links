@@ -69,6 +69,10 @@ a{
 }
 
 .store-info{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   margin-top: 10PX;
   color: white;
