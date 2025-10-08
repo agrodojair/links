@@ -21,6 +21,17 @@
   font-family: var(--font1);
 }
 
+.info-flex{
+  justify-self: center;
+  display: flex;
+  gap: 10px;
+  flex-direction: row;
+}
+
+.info-flex img{
+  margin-top: 8px;
+}
+
 #myVideo {
   filter: blur(5px);
   position: fixed;
@@ -57,7 +68,7 @@ a{
 }
 
 .store-info h1{
-  font-size: 1.5em;
+  font-size: 2em;
   font-family: var(--font2);
 }
 
