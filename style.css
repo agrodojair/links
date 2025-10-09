@@ -68,6 +68,10 @@ a{
   width: 250px;
 }
 
+.logo-top img{
+  width: 250px;
+}
+
 .store-info{
   display: flex;
   flex-direction: column;
