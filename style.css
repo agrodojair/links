@@ -61,11 +61,12 @@ a{
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 30px;
+  margin-top: 50%;
 }
 
 .logo-top video{
   width: 250px;
+  border-radius: 50px;
 }
 
 .store-info{
