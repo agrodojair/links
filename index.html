@@ -78,6 +78,19 @@ E FICAR MELHOR QUE AQUELE LINKTREE QUE COBRA PRA FAZER ATÉ UM BOTÃO LKKKKKKKK-
     </div>
      <footer><a href="https://github.com/joaovitorjeremias" target="_blank">&copy; João Vitor</a></footer>
   </div>
- 
+
+<script>
+  // Detect Safari (excluding Chrome, Edge, etc.)
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+  if (isSafari) {
+    const logoTop = document.getElementById('logo-top');
+
+    // Replace video with image
+    logoTop.innerHTML = `
+      <img src="images/final-2.jpg" alt="Logo" style="width:100%; height:auto;" />
+    `;
+  }
+</script> 
 </body>
 </html>
