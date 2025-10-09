@@ -80,17 +80,15 @@ E FICAR MELHOR QUE AQUELE LINKTREE QUE COBRA PRA FAZER ATÉ UM BOTÃO LKKKKKKKK-
   </div>
 
 <script>
-  // Detect Safari (excluding Chrome, Edge, etc.)
-  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  const supportsWebM = document.createElement('video').canPlayType('video/webm; codecs="vp8, vorbis"');
+    if (!supportsWebM) {
+      const logoTop = document.getElementById('logo-top');
 
-  if (isSafari) {
-    const logoTop = document.getElementById('logo-top');
-
-    // Replace video with image
-    logoTop.innerHTML = `
-      <img src="images/agrodojair.png" alt="Logo"/>
-    `;
-  }
-</script> 
+      // Replace video with image
+      logoTop.innerHTML = `
+        <img src="images/agrodojair.png" alt="Logo"/>
+      `;
+}
+</script>
 </body>
 </html>
