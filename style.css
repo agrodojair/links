@@ -236,6 +236,10 @@ footer{
     font-size: 0.8em;
   }
 
+  #whatsappButton{
+    font-size: 1.2em;
+  }
+
   #uber svg{
     width: 25px;
     margin-bottom: -7px;
@@ -246,9 +250,9 @@ footer{
     margin-bottom: -4px;
 }
 
-  #chat svg{
-    width: 25px;
-    margin-bottom: -5px;
+  #whatsappButton svg{
+    width: 20px;
+    margin-bottom: -6px;
   }
 
   #avalie svg{
