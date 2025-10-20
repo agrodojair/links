@@ -18,8 +18,15 @@ sendButton.addEventListener('click', () => {
     return;
     }
 
-    const phoneNumber = '5551985451245';
-    const message = encodeURIComponent(`Olá, meu nome é ${name}!`);
-    const url = `https://wa.me/${phoneNumber}?text=${message}%0A%0AEndereço: ${rua.value}, ${numero.value}, ${bairro.value}, ${cidade.value}`;
-    window.open(url, '_blank');
+    if (!rua.value || !numero.value || !bairro.value || !cidade.value) {
+        const phoneNumber = '5551985451245';
+        const message = encodeURIComponent(`Olá, meu nome é ${name}!`);
+        const url = `https://wa.me/${phoneNumber}?text=${message}`;
+        window.open(url, '_blank');}
+    else {
+        const phoneNumber = '5551985451245';
+        const message = encodeURIComponent(`Olá, meu nome é ${name}!`);
+        const url = `https://wa.me/${phoneNumber}?text=${message}%0A%0AEndereço: ${rua.value}, ${numero.value}, ${bairro.value}, ${cidade.value}`;
+        window.open(url, '_blank');
+    }
 });
