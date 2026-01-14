@@ -11,13 +11,17 @@
 </head>
 <body>
 
-  <div class="video-bg">
-    <video autoplay muted loop playsinline webkit-playsinline src="images/bg-site.mp4" id="myVideo"></video>
+  <div class="video-bg" poster="images/bg-2.jpg">
+    <video autoplay muted loop playsinline id="myVideo">
+      <source src="images/bg-site-webm.webm" type="video/webm">
+      <source src="images/bg-site.mp4" type="video/mp4">
+    </video>
   </div>
 
   <div class="conteudo-total">
     <div class="logo-top">
-      <video autoplay muted playsinline loop>
+      <video autoplay muted loop playsinline>
+        <source src="images/final-final-webm.webm" type="video/webm">
         <source src="images/final-final.mp4" type="video/mp4">
       </video>
     </div>
