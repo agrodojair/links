@@ -127,7 +127,7 @@ a{
   margin-top: 20px;
   width: 60vw;
   max-width: 600px;
-  min-width: 450px;
+  min-width: 350px;
   height: auto;
   background-color: rgb(224, 215, 204);
   border-radius: 20px;
@@ -276,7 +276,7 @@ footer{
   margin-top: 20px;
   width: 60vw;
   max-width: 600px;
-  min-width: 450px;
+  min-width: 350px;
   height: auto;
   background-color: rgb(224, 215, 204);
   border-radius: 20px;
