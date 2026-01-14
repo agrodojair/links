@@ -37,7 +37,7 @@ p, a, h1, h2, h5, span{
 }
 
 .info-flex img{
-  margin-top: 8px;
+  margin-top: 20px;
 }
 
 #myVideo {
@@ -84,7 +84,7 @@ a{
 }
 
 .store-info h1{
-  font-size: 2em;
+  font-size: 3em;
   font-family: var(--font2);
 }
 
@@ -127,7 +127,7 @@ a{
   margin-top: 20px;
   width: 60vw;
   max-width: 600px;
-  min-width: 350px;
+  min-width: 500px;
   height: auto;
   background-color: rgb(224, 215, 204);
   border-radius: 20px;
@@ -183,6 +183,7 @@ a{
 }
 
 #map-box h5{
+  font-size: 25px;
   margin-top: 30px;
   text-align: left;
 }
@@ -220,16 +221,13 @@ footer{
   #map-box span{
     width: 150px;
     height: 30px;
-    font-size: 16px;
+    font-size: 20px;
+    margin-left: 40px;
   }
 
   #map-box p{
-    font-size: 11px;
+    font-size: 15px;
     margin-right: 10px;
-  }
-
-  #map-box img{
-    transform: scale(1.5);
   }
 
   #cat span, #chat span, #uber span, #avalie span{
@@ -278,7 +276,7 @@ footer{
   margin-top: 20px;
   width: 60vw;
   max-width: 600px;
-  min-width: 350px;
+  min-width: 500px;
   height: auto;
   background-color: rgb(224, 215, 204);
   border-radius: 20px;
