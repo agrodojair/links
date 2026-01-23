@@ -121,6 +121,10 @@ a{
 }
 
 .custom-button{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.267);
   font-size: 22px;
   padding: 10px;
@@ -136,6 +140,34 @@ a{
   color: #292015;
   box-shadow: 3px 3px 0px #634e33;
   border: 2px solid #634e33;
+}
+
+.custom-button-map{
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.267);
+  font-size: 22px;
+  padding: 10px;
+  margin-top: 20px;
+  width: 60vw;
+  max-width: 600px;
+  min-width: 350px;
+  height: auto;
+  background-color: rgb(224, 215, 204);
+  border-radius: 20px;
+  transition: all 0.2s ease-in-out;
+  font-weight: bolder;
+  color: #292015;
+  box-shadow: 3px 3px 0px #634e33;
+  border: 2px solid #634e33;
+}
+
+.custom-button svg{
+  position: absolute;
+  left: 15px;
+  margin-top: -10px;
+}
+
+#instagram-button img{
+  margin-bottom: -7px;
 }
 
 #uber svg{
@@ -239,13 +271,13 @@ footer{
   }
 
   #uber svg{
-    width: 25px;
+    width: 30px;
     margin-bottom: -7px;
   }
 
   #cat svg{
-    width: 25px;
-    margin-bottom: -4px;
+    width: 30px;
+    margin-bottom: -8px;
 }
 
   #whatsappButton svg{
@@ -254,8 +286,8 @@ footer{
   }
 
   #avalie svg{
-  width: 25px;
-  margin-bottom: -5px;
+  width: 30px;
+  margin-bottom: -8px;
 }
 
   footer{
@@ -269,6 +301,9 @@ footer{
 }
 
 .whatsapp-button {
+  display: flex;
+  justify-content: center;
+  position: relative;
   cursor: pointer;
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.267);
   font-size: 22px;
@@ -285,6 +320,12 @@ footer{
   color: #292015;
   box-shadow: 3px 3px 0px #634e33;
   border: 2px solid #634e33;
+}
+
+.whatsapp-button svg{
+  position: absolute;
+  left: 15px;
+  margin-top: -4px;
 }
 
 .whatsapp-button:hover {
