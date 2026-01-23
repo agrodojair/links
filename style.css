@@ -199,6 +199,10 @@ a{
   scale: 1.02;
 }
 
+.custom-button-map:hover{
+  scale: 1.02;
+}
+
 #map-box{
   overflow: hidden;
 }
