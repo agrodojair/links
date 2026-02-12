@@ -341,4 +341,5 @@ footer{
   width: 390px;
   height: 170px;
   border-radius: 15px;
+  object-fit: cover;
 }
