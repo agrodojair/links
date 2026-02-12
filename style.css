@@ -338,8 +338,9 @@ footer{
 }
 
 #map-box img{
-  width: 390px;
-  height: 170px;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;   /* ou contain */
+  display: block;
   border-radius: 15px;
-  object-fit: cover;
 }
