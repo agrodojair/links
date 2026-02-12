@@ -336,3 +336,9 @@ footer{
   width: 30px;
   margin-bottom: -7px;
 }
+
+#map-box img{
+  width: 390px;
+  height: 170px;
+  border-radius: 15px;
+}
