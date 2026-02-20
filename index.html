@@ -40,6 +40,40 @@
 
     <div  class="buttons">
 
+      <div class="custom-button calc-expand" id="calcBox">
+
+        <div class="calc-header">
+          💊 Calculadora de Antipulgas
+        </div>
+
+        <div class="calc-content">
+
+          <div class="campo">
+            <label>Idade:</label>
+
+            <div class="radio-group">
+              <label class="radio-option">
+                <input type="radio" name="idade" value="mais2" checked>
+                <span>Mais de 2 meses</span>
+              </label>
+
+              <label class="radio-option">
+                <input type="radio" name="idade" value="menos2">
+                <span>Menos de 2 meses</span>
+              </label>
+            </div>
+          </div>
+
+          <label>Peso aproximado (kg):</label>
+          <input type="number" id="peso" step="0.1" placeholder="Ex: 3.5">
+
+          <button type="button" onclick="calcular()">Verificar</button>
+
+          <div id="resultadoCalc"></div>
+
+        </div>
+      </div>
+
       <a draggable="false" href="https://www.instagram.com/agrodojair" target="_blank">
         <div id="instagram-button" class="custom-button">
           <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"  fill="black" class="bi bi-instagram" viewBox="0 0 16 16">
@@ -91,6 +125,98 @@
     </div>
      <footer><a href="https://github.com/joaovitorjeremias" target="_blank">&copy; João Vitor</a></footer>
   </div>
+
+<script>
+const calcBox = document.getElementById("calcBox");
+const calcHeader = calcBox.querySelector(".calc-header");
+
+calcHeader.addEventListener("click", function() {
+  calcBox.classList.toggle("active");
+});
+
+function criarCard(nome, faixa, preco, imagem) {
+  return `
+    <div class="produto-card">
+      <div class="produto-img">
+        <img src="${imagem}" alt="${nome}">
+      </div>
+      <div class="produto-info">
+        <h4>${nome}</h4>
+        <p>${faixa}</p>
+        <a target="_blank" href="https://api.whatsapp.com/send/?phone=5551985451245&text=Ol%C3%A1%21+Gostaria+de+saber+sobre+o+valor+do+comprimido+antipulgas+e+carrapatos%20%2A${nome}%2A+-+%2A${faixa}%2A&type=phone_number&app_absent=0"><strong>Confira valores</strong></a>
+      </div>
+    </div>
+  `;
+}
+
+function calcular() {
+  const idade = document.querySelector('input[name="idade"]:checked').value;
+  const peso = parseFloat(document.getElementById("peso").value);
+  const resultado = document.getElementById("resultadoCalc");
+
+  resultado.innerHTML = "";
+
+  if (!idade || !peso) {
+    resultado.innerHTML = "Preencha todos os campos.";
+    return;
+  }
+
+  if (idade === "menos2" || peso < 1.3) {
+    resultado.innerHTML = "⚠️ Não pode tomar o medicamento.<br><br>Devido à <strong>idade</strong> ou peso, o medicamento não é recomendado. Consulte um veterinário para opções seguras.";
+    return;
+  }
+
+  let recomendacoes = [];
+
+  // ===== Credeli =====
+  if (peso >= 1.3 && peso <= 2.5)
+    recomendacoes.push(criarCard("Credeli", "1,3 – 2,5 Kg", "R$ 57,00", "images/antipulgas/credeli-1.png"));
+  else if (peso <= 5.5)
+    recomendacoes.push(criarCard("Credeli", "2,5 – 5,5 Kg", "R$ 63,00", "images/antipulgas/credeli-2.png"));
+  else if (peso <= 11)
+    recomendacoes.push(criarCard("Credeli", "5,5 – 11 Kg", "R$ 67,00", "images/antipulgas/credeli-3.png"));
+  else if (peso <= 22)
+    recomendacoes.push(criarCard("Credeli", "11 – 22 Kg", "R$ 79,00", "images/antipulgas/credeli-4.png"));
+  else if (peso <= 45)
+    recomendacoes.push(criarCard("Credeli", "22 – 45 Kg", "R$ 98,00", "images/antipulgas/credeli-5.png"));
+
+  // ===== NexGard =====
+  if (peso >= 2 && peso <= 4)
+    recomendacoes.push(criarCard("NexGard", "2 – 4 Kg", "R$ 74,00", "images/antipulgas/NEX-P.png"));
+  else if (peso <= 10)
+    recomendacoes.push(criarCard("NexGard", "4 – 10 Kg", "R$ 80,00", "images/antipulgas/NEX-M.png"));
+  else if (peso <= 25)
+    recomendacoes.push(criarCard("NexGard", "10 – 25 Kg", "R$ 93,00", "images/antipulgas/NEX-G.png"));
+  else if (peso <= 50)
+    recomendacoes.push(criarCard("NexGard", "25 – 50 Kg", "R$ 111,00", "images/antipulgas/NEX-GG.png"));
+
+  // ===== Simparic =====
+  if (peso >= 1.3 && peso <= 2.5)
+    recomendacoes.push(criarCard("Simparic", "1,3 – 2,5 Kg", "R$ 66,00", "images/antipulgas/sim-1.png"));
+  else if (peso <= 5)
+    recomendacoes.push(criarCard("Simparic", "2,6 – 5 Kg", "R$ 72,00", "images/antipulgas/sim-2.png"));
+  else if (peso <= 10)
+    recomendacoes.push(criarCard("Simparic", "5,1 – 10 Kg", "R$ 77,00", "images/antipulgas/sim-3.png"));
+  else if (peso <= 20)
+    recomendacoes.push(criarCard("Simparic", "10 – 20 Kg", "R$ 92,00", "images/antipulgas/sim-4.png"));
+  else if (peso <= 40)
+    recomendacoes.push(criarCard("Simparic", "20 – 40 Kg", "R$ 108,50", "images/antipulgas/sim-5.png"));
+  else if (peso <= 60)
+    recomendacoes.push(criarCard("Simparic", "40 – 60 Kg", "R$ 127,00", "images/antipulgas/sim-6.png"));
+
+  if (recomendacoes.length === 0) {
+    resultado.innerHTML = "Não há medicamento disponível para esse peso.";
+    return;
+  }
+
+  resultado.innerHTML = `
+    <div class="cards-container">
+      ${recomendacoes.join("")}
+    </div>
+  `;
+}
+</script>
+  
 </body>
 </html>
 
