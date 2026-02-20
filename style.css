@@ -467,18 +467,46 @@ footer{
   margin-bottom: 25px;
 }
 
+input[type="radio"] {
+  appearance: none;
+
+  width: 18px;
+  height: 18px;
+  border: 2px solid #000000; /* cor da borda */
+  border-radius: 50%;
+  position: relative;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+input[type="radio"]::before {
+  content: "";
+  position: absolute;
+  inset: 3px; /* controla tamanho da bolinha */
+  border-radius: 50%;
+  background: #2e7d32; /* cor quando selecionado */
+  transform: scale(0);
+  transition: 0.2s ease;
+}
+
+input[type="radio"]:checked::before {
+  transform: scale(1);
+}
+
+
 .radio-option {
   display: flex;
-  margin-top: px;
+  margin-top: 15px;
   align-items: center;
+  justify-content: center;
   cursor: pointer;
   font-size: 14px;
 }
 
-.radio-option span {
-  font-size: 18px;
-  margin-left: 5px;
+.radio-option label {
   white-space: nowrap;
+  margin-left: 10px;
+  font-size: 18px;
 }
 
 .radio-option input {
