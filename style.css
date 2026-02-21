@@ -395,6 +395,21 @@ footer{
   margin-top: 15px;
 }
 
+.selo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+}
+
+.selo img {
+  z-index: 2;
+  margin-left: 8.5vw;
+  margin-top: 65px;
+  width: 137px;
+  height: auto;
+}
+
 .produto-card {
   background: white;
   border-radius: 18px;
@@ -526,5 +541,10 @@ input[type="radio"]:checked::before {
 @media (max-width: 900px) {
   .produto-info strong{
     font-size: 10px;
+  }
+
+  .selo img{
+    margin-left: 27vw;
+    width: 129px;
   }
 }
