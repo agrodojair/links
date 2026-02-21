@@ -125,6 +125,8 @@
     </div>
      <footer><a href="https://github.com/joaovitorjeremias" target="_blank">&copy; João Vitor</a></footer>
   </div>
+  
+<a href=""></a>
 
 <script>
 const calcBox = document.getElementById("calcBox");
@@ -162,7 +164,13 @@ function calcular() {
   }
 
   if (idade === "menos2" || peso < 1.3) {
-    resultado.innerHTML = "⚠️ Não pode tomar o medicamento.<br><br>Devido à <strong>idade</strong> ou peso, o medicamento não é recomendado. Consulte um veterinário para opções seguras.";
+    resultado.innerHTML =
+      `<div class='no-result'>
+        <span>⚠️ Para cães com menos de 2 meses ou abaixo de 1,3Kg recomendamos entrar em contato!</span>
+        <a target="_blank" href="https://api.whatsapp.com/send/?phone=5551985451245&text=Ol%C3%A1%21+Gostaria+de+saber+sobre+quais+op%C3%A7%C3%B5es+antipulgas+e+carrapatos+posso+dar+para+o+meu+c%C3%A3o.+Ele+tem+${peso}Kg+e+menos+de+2+meses%21&type=phone_number&app_absent=0">
+          <p>Entre em contato e veja quais as indicações!</p>
+        </a>
+      </div>`;
     return;
   }
 
@@ -207,7 +215,13 @@ function calcular() {
     recomendacoes.push(criarCard("Simparic", "40 – 60 Kg", "images/antipulgas/sim-6.png"));
 
   if (recomendacoes.length === 0) {
-    resultado.innerHTML = "Não há medicamento disponível para esse peso.";
+    resultado.innerHTML = `
+      <div class='no-result'>
+        <span>⚠️ Não há recomendações diretas para o peso informado.</span>
+        <a target="_blank" href="https://api.whatsapp.com/send/?phone=5551985451245&text=Ol%C3%A1%21+Gostaria+de+saber+sobre+quais+comprimidos+antipulgas+e+carrapatos+posso+dar+para+o+meu+c%C3%A3o.+Ele+tem+${peso}Kg%21&type=phone_number&app_absent=0">
+          <p>Entre em contato e veja quais as indicações!</p>
+        </a>
+      </div>`;
     return;
   }
 

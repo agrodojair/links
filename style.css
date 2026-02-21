@@ -513,6 +513,15 @@ input[type="radio"]:checked::before {
   cursor: pointer;
 }
 
+.no-result p {
+  background: #2E7D32;
+  color: white;
+  margin-top: 15px;
+  padding: 6px;
+  border-radius: 10px;
+  font-size: 15px;
+}
+
 @media (max-width: 900px) {
   .produto-info strong{
     font-size: 10px;
