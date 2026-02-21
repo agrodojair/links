@@ -381,8 +381,9 @@ footer{
 }
 
 .calc-content button {
-  background: #111;
+  background: #2e7d32;
   color: white;
+  font-size: 15px;
   border: none;
   cursor: pointer;
 }
@@ -398,7 +399,7 @@ footer{
   background: white;
   border-radius: 18px;
   overflow: hidden;
-  box-shadow: 0 6px 14px #2e7d32(0,0,0,0.08);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.08);
   text-align: center;
   transition: transform 0.2s ease;
 }
