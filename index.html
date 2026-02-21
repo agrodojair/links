@@ -224,8 +224,15 @@ function calcular() {
       </div>`;
     return;
   }
-
+if (peso > 45) {
   resultado.innerHTML = `
+    <div class="cards-container">
+      ${recomendacoes.join("")}
+    </div>
+  `;
+}
+else {
+    resultado.innerHTML = `
       <div class="selo">
         <img src="images/selo.png">
       </div>
@@ -233,6 +240,8 @@ function calcular() {
       ${recomendacoes.join("")}
     </div>
   `;
+}
+
 }
 </script>
 </body>
