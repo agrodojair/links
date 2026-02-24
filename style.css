@@ -436,9 +436,8 @@ footer{
 .produto-img {
   background: #f7f7f7;
   padding: 16px;
-  border-radius: 200px 20px 20px 20px;
+  border-radius: 18px;
   aspect-ratio: 1 / 1;
-
   display: flex;
   align-items: center;
   justify-content: center;
@@ -454,7 +453,7 @@ footer{
   background: #0d5c2f;
   color: white;
   padding: 14px;
-  border-radius: 0 0 20px 20px;
+  border-radius: 18px;
 }
 
 .produto-info h4 {
