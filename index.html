@@ -137,19 +137,29 @@ calcHeader.addEventListener("click", function() {
 });
 
 function criarCard(nome, faixa, imagem) {
+  const destaque = nome === "Credeli" ? "card-destaque" : "";
+
   return `
-    <div class="produto-card">
+    <div class="produto-card ${destaque}">
+      ${nome === "Credeli" ? `
+        <div class="selo">
+          <img src="images/selo.png">
+        </div>
+      ` : ""}
+      
       <div class="produto-img">
         <img src="${imagem}" alt="${nome}">
       </div>
       <div class="produto-info">
         <h4>${nome}</h4>
         <p>${faixa}</p>
-        <a target="_blank" href="https://api.whatsapp.com/send/?phone=5551985451245&text=Ol%C3%A1%21+Gostaria+de+saber+sobre+o+valor+do+comprimido+antipulgas+e+carrapatos%20%2A${nome}%2A+-+%2A${faixa}%2A&type=phone_number&app_absent=0"><strong>Confira valores</strong></a>
+        <a target="_blank" href="https://api.whatsapp.com/send/?phone=5551985451245&text=Ol%C3%A1%21+Gostaria+de+saber+sobre+o+valor+do+comprimido+antipulgas+e+carrapatos%20%2A${nome}%2A+-+%2A${faixa}%2A&type=phone_number&app_absent=0">
+          <strong>Confira valores</strong>
+        </a>
       </div>
     </div>
   `;
-}
+} 
 
 function calcular() {
   const idade = document.querySelector('input[name="idade"]:checked').value;
@@ -233,12 +243,9 @@ if (peso > 45) {
 }
 else {
     resultado.innerHTML = `
-      <div class="selo">
-        <img src="images/selo.png">
+      <div class="cards-container">
+        ${recomendacoes.join("")}
       </div>
-    <div class="cards-container">
-      ${recomendacoes.join("")}
-    </div>
   `;
 }
 

@@ -395,28 +395,30 @@ footer{
   margin-top: 15px;
 }
 
-.selo {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100vw;
+.card-destaque {
+  position: relative;
 }
 
-.selo img {
-  z-index: 2;
-  margin-left: 8.5vw;
-  margin-top: 65px;
-  width: 137px;
+.card-destaque .selo {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  z-index: 5;
+}
+
+.card-destaque .selo img {
+  width: 180px;
   height: auto;
 }
 
 .produto-card {
   background: white;
   border-radius: 18px;
-  overflow: hidden;
   box-shadow: 0 6px 14px rgba(0,0,0,0.08);
   text-align: center;
   transition: transform 0.2s ease;
+  overflow: visible;
+  position: relative;
 }
 
 .produto-card:hover {
@@ -488,7 +490,7 @@ input[type="radio"] {
 
   width: 18px;
   height: 18px;
-  border: 2px solid #000000; /* cor da borda */
+  border: 2px solid #000000;
   border-radius: 50%;
   position: relative;
   cursor: pointer;
@@ -498,9 +500,9 @@ input[type="radio"] {
 input[type="radio"]::before {
   content: "";
   position: absolute;
-  inset: 3px; /* controla tamanho da bolinha */
+  inset: 3px;
   border-radius: 50%;
-  background: #2e7d32; /* cor quando selecionado */
+  background: #2e7d32;
   transform: scale(0);
   transition: 0.2s ease;
 }
@@ -541,10 +543,5 @@ input[type="radio"]:checked::before {
 @media (max-width: 900px) {
   .produto-info strong{
     font-size: 10px;
-  }
-
-  .selo img{
-    margin-left: 27vw;
-    width: 129px;
   }
 }
