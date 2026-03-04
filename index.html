@@ -3,6 +3,7 @@
 <!DOCTYPE html>
 <html lang="pt-Br">
 <head>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https://i.imgur.com; media-src 'self'; frame-src https://maps.google.com; style-src 'self' 'unsafe-inline'; script-src 'self';">
   <meta charset="UTF-8">
   <title>Agro do Jair</title>
   <meta name="description" content="Agro do Jair - Agropecuária em Tramandaí - RS. Nos siga no Instagram e acesse nossos links úteis!" />
@@ -67,14 +68,14 @@
           <label>Peso aproximado (kg):</label>
           <input type="number" id="peso" step="0.1" placeholder="Ex: 3.5">
 
-          <button type="button" onclick="calcular()">Verificar</button>
+          <button type="button">Verificar</button>
 
           <div id="resultadoCalc"></div>
 
         </div>
       </div>
 
-      <a draggable="false" href="https://www.instagram.com/agrodojair" target="_blank">
+      <a draggable="false" href="https://www.instagram.com/agrodojair" target="_blank" rel="noopener noreferrer">
         <div id="instagram-button" class="custom-button">
           <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"  fill="black" class="bi bi-instagram" viewBox="0 0 16 16">
             <path d="M8 0C5.829 0 5.556.01 4.703.048 3.85.088 3.269.222 2.76.42a3.9 3.9 0 0 0-1.417.923A3.9 3.9 0 0 0 .42 2.76C.222 3.268.087 3.85.048 4.7.01 5.555 0 5.827 0 8.001c0 2.172.01 2.444.048 3.297.04.852.174 1.433.372 1.942.205.526.478.972.923 1.417.444.445.89.719 1.416.923.51.198 1.09.333 1.942.372C5.555 15.99 5.827 16 8 16s2.444-.01 3.298-.048c.851-.04 1.434-.174 1.943-.372a3.9 3.9 0 0 0 1.416-.923c.445-.445.718-.891.923-1.417.197-.509.332-1.09.372-1.942C15.99 10.445 16 10.173 16 8s-.01-2.445-.048-3.299c-.04-.851-.175-1.433-.372-1.941a3.9 3.9 0 0 0-.923-1.417A3.9 3.9 0 0 0 13.24.42c-.51-.198-1.092-.333-1.943-.372C10.443.01 10.172 0 7.998 0zm-.717 1.442h.718c2.136 0 2.389.007 3.232.046.78.035 1.204.166 1.486.275.373.145.64.319.92.599s.453.546.598.92c.11.281.24.705.275 1.485.039.843.047 1.096.047 3.231s-.008 2.389-.047 3.232c-.035.78-.166 1.203-.275 1.485a2.5 2.5 0 0 1-.599.919c-.28.28-.546.453-.92.598-.28.11-.704.24-1.485.276-.843.038-1.096.047-3.232.047s-2.39-.009-3.233-.047c-.78-.036-1.203-.166-1.485-.276a2.5 2.5 0 0 1-.92-.598 2.5 2.5 0 0 1-.6-.92c-.109-.281-.24-.705-.275-1.485-.038-.843-.046-1.096-.046-3.233s.008-2.388.046-3.231c.036-.78.166-1.204.276-1.486.145-.373.319-.64.599-.92s.546-.453.92-.598c.282-.11.705-.24 1.485-.276.738-.034 1.024-.044 2.515-.045zm4.988 1.328a.96.96 0 1 0 0 1.92.96.96 0 0 0 0-1.92m-4.27 1.122a4.109 4.109 0 1 0 0 8.217 4.109 4.109 0 0 0 0-8.217m0 1.441a2.667 2.667 0 1 1 0 5.334 2.667 2.667 0 0 1 0-5.334"/>
@@ -83,7 +84,7 @@
         </div>
       </a>
 
-      <a href="https://api.whatsapp.com/send/?phone=5551985451245&text=Ol%C3%A1!%20Meu%20nome%20%C3%A9%20" target="_blank" draggable="false">
+      <a href="https://api.whatsapp.com/send/?phone=5551985451245&text=Ol%C3%A1!%20Meu%20nome%20%C3%A9%20" target="_blank" draggable="false" rel="noopener noreferrer">
         <div class="whatsapp-container" id="whatsappContainer">
           <div class="whatsapp-button" id="whatsappButton">
             <svg xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" image-rendering="optimizeQuality" fill-rule="evenodd" clip-rule="evenodd" viewBox="0 0 510 512.459"><path fill="#111B21" d="M435.689 74.468C387.754 26.471 324 .025 256.071 0 116.098 0 2.18 113.906 2.131 253.916c-.024 44.758 11.677 88.445 33.898 126.946L0 512.459l134.617-35.311c37.087 20.238 78.85 30.891 121.345 30.903h.109c139.949 0 253.88-113.917 253.928-253.928.024-67.855-26.361-131.645-74.31-179.643v-.012zm-179.618 390.7h-.085c-37.868-.011-75.016-10.192-107.428-29.417l-7.707-4.577-79.886 20.953 21.32-77.889-5.017-7.987c-21.125-33.605-32.29-72.447-32.266-112.322.049-116.366 94.729-211.046 211.155-211.046 56.373.025 109.364 22.003 149.214 61.903 39.853 39.888 61.781 92.927 61.757 149.313-.05 116.377-94.728 211.058-211.057 211.058v.011zm115.768-158.067c-6.344-3.178-37.537-18.52-43.358-20.639-5.82-2.119-10.044-3.177-14.27 3.178-4.225 6.357-16.388 20.651-20.09 24.875-3.702 4.238-7.403 4.762-13.747 1.583-6.343-3.178-26.787-9.874-51.029-31.487-18.86-16.827-31.597-37.598-35.297-43.955-3.702-6.355-.39-9.789 2.775-12.943 2.849-2.848 6.344-7.414 9.522-11.116s4.225-6.355 6.343-10.581c2.12-4.238 1.06-7.937-.522-11.117-1.584-3.177-14.271-34.409-19.568-47.108-5.151-12.37-10.385-10.69-14.269-10.897-3.703-.183-7.927-.219-12.164-.219s-11.105 1.582-16.925 7.939c-5.82 6.354-22.209 21.709-22.209 52.927 0 31.22 22.733 61.405 25.911 65.642 3.177 4.237 44.745 68.318 108.389 95.812 15.135 6.538 26.957 10.446 36.175 13.368 15.196 4.834 29.027 4.153 39.96 2.52 12.19-1.825 37.54-15.353 42.824-30.172 5.283-14.818 5.283-27.529 3.701-30.172-1.582-2.641-5.819-4.237-12.163-7.414l.011-.024z"/></svg>
@@ -92,21 +93,21 @@
         </div>
       </a>
 
-      <a href="https://whatsapp.com/channel/0029VaAhafn6mYPSyvYMOx1E" target="_blank" draggable="false">  
+      <a href="https://whatsapp.com/channel/0029VaAhafn6mYPSyvYMOx1E" target="_blank" draggable="false" rel="noopener noreferrer">  
         <div class="custom-button" id="canal">
           <img src="images/whatsapp-channel.png" alt="" width="28" height="28">
           <span>Canal de ofertas no WhatsApp!</span>
         </div>
       </a>
 
-      <a draggable="false" href="https://g.page/r/Ce6VIIlsr6DkEBM/review" target="_blank">
+      <a draggable="false" href="https://g.page/r/Ce6VIIlsr6DkEBM/review" target="_blank" rel="noopener noreferrer">
         <div class="custom-button" id="avalie">
           <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="none"><path fill="#4285F4" d="M14.9 8.161c0-.476-.039-.954-.121-1.422h-6.64v2.695h3.802a3.24 3.24 0 01-1.407 2.127v1.75h2.269c1.332-1.22 2.097-3.02 2.097-5.15z"/><path fill="#34A853" d="M8.14 15c1.898 0 3.499-.62 4.665-1.69l-2.268-1.749c-.631.427-1.446.669-2.395.669-1.836 0-3.393-1.232-3.952-2.888H1.85v1.803A7.044 7.044 0 008.14 15z"/><path fill="#FBBC04" d="M4.187 9.342a4.17 4.17 0 010-2.68V4.859H1.849a6.97 6.97 0 000 6.286l2.338-1.803z"/><path fill="#EA4335" d="M8.14 3.77a3.837 3.837 0 012.7 1.05l2.01-1.999a6.786 6.786 0 00-4.71-1.82 7.042 7.042 0 00-6.29 3.858L4.186 6.66c.556-1.658 2.116-2.89 3.952-2.89z"/></svg>
           <span>Nos avalie no Google!</span>
         </div>
       </a>
 
-      <a draggable="false" href="https://agrodojair.comercio.net.br/#/catalogo" target="_blank">
+      <a draggable="false" href="https://agrodojair.comercio.net.br/#/catalogo" target="_blank" rel="noopener noreferrer">
         <div class="custom-button" id="cat">
           <svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128.12 106.26"><title>shopping-basket</title><path d="M6.45,30.68h14a7.88,7.88,0,0,1,1-1.66L41.68,3.23a7.89,7.89,0,1,1,12.44,9.71L40.22,30.68H88.08L74,12.75A7.89,7.89,0,0,1,86.47,3L106.65,28.8a8,8,0,0,1,1.1,1.88h13.92a6.45,6.45,0,0,1,6.45,6.45V51a6.45,6.45,0,0,1-1.89,4.55h0a6.41,6.41,0,0,1-4.54,1.89H117l-2.27,43.13a6.11,6.11,0,0,1-1.74,4h0a5.66,5.66,0,0,1-4,1.68H21.57a5.52,5.52,0,0,1-3.78-1.48l-.2-.17a6.5,6.5,0,0,1-1.79-3.88L11.25,57.47H6.45A6.45,6.45,0,0,1,0,51V37.13a6.45,6.45,0,0,1,6.45-6.45ZM79.34,64.26h8.17a.89.89,0,0,1,.88.89V92.1a.89.89,0,0,1-.88.89H79.34a.88.88,0,0,1-.88-.89V65.15a.88.88,0,0,1,.88-.89ZM60,64.26h8.16a.89.89,0,0,1,.89.89V92.1a.89.89,0,0,1-.89.89H60a.89.89,0,0,1-.89-.89V65.15a.89.89,0,0,1,.89-.89Zm-19.37,0h8.17a.88.88,0,0,1,.88.89V92.1a.88.88,0,0,1-.88.89H40.61a.89.89,0,0,1-.88-.89V65.15a.89.89,0,0,1,.88-.89Zm71.12-6.79H16.54L21,100.2a1.12,1.12,0,0,0,.29.67l.05,0a.31.31,0,0,0,.19.06H109a.43.43,0,0,0,.3-.12h0a.78.78,0,0,0,.22-.52l2.26-42.86ZM121.67,36H6.45a1.18,1.18,0,0,0-1.17,1.17V51a1.2,1.2,0,0,0,1.17,1.17H121.67a1.14,1.14,0,0,0,.82-.34h0a1.14,1.14,0,0,0,.34-.82V37.13A1.18,1.18,0,0,0,121.67,36Z"/></svg>
           <span>Catálogo Online</span>
@@ -114,143 +115,18 @@
       </a>
 
       <div class="custom-button-map" id="map-box">
-        <iframe src="https://maps.google.com/maps?q=R.%20Crist%C3%B3v%C3%A3o%20Colombo,%20845,%20Tramanda%C3%AD&t=&z=15&ie=UTF8&iwloc=&output=embed" frameborder="0"></iframe>
+        <iframe src="https://maps.google.com/maps?q=R.%20Crist%C3%B3v%C3%A3o%20Colombo,%20845,%20Tramanda%C3%AD&t=&z=15&ie=UTF8&iwloc=&output=embed" frameborder="0" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
         <div class="map-info">
           <h3>Agro do Jair</h3>
           <p>R. Cristóvão Colombo, 845 <br>São Francisco 2, Tramandaí - RS</p>
-          <a href="https://www.google.com/maps/dir/?api=1&destination=R.%20Crist%C3%B3v%C3%A3o%20Colombo,%20845,%20Tramanda%C3%AD" target="_blank">Como chegar →</a>
+          <a href="https://www.google.com/maps/dir/?api=1&destination=R.%20Crist%C3%B3v%C3%A3o%20Colombo,%20845,%20Tramanda%C3%AD" target="_blank" rel="noopener noreferrer">Como chegar →</a>
         </div>
 
         </div>
     </div>
-     <footer><a href="https://github.com/joaovitorjeremias" target="_blank">&copy; João Vitor</a></footer>
+     <footer><a href="https://github.com/joaovitorjeremias" target="_blank" rel="noopener noreferrer">&copy; João Vitor</a></footer>
   </div>
-  
-<a href=""></a>
-
-<script>
-const calcBox = document.getElementById("calcBox");
-const calcHeader = calcBox.querySelector(".calc-header");
-
-calcHeader.addEventListener("click", function() {
-  calcBox.classList.toggle("active");
-});
-
-function criarCard(nome, faixa, imagem) {
-  const destaque = nome === "Credeli" ? "card-destaque" : "";
-
-  return `
-    <div class="produto-card ${destaque}">
-      ${nome === "Credeli" ? `
-        <div class="selo">
-          <img src="images/selo.png">
-        </div>
-      ` : ""}
-      
-      <div class="produto-img">
-        <img src="${imagem}" alt="${nome}">
-      </div>
-      <div class="produto-info">
-        <h4>${nome}</h4>
-        <p>${faixa}</p>
-        <a target="_blank" href="https://api.whatsapp.com/send/?phone=5551985451245&text=Ol%C3%A1%21+Gostaria+de+saber+sobre+o+valor+do+comprimido+antipulgas+e+carrapatos%20%2A${nome}%2A+-+%2A${faixa}%2A&type=phone_number&app_absent=0">
-          <strong>Confira valores</strong>
-        </a>
-      </div>
-    </div>
-  `;
-} 
-
-function calcular() {
-  const idade = document.querySelector('input[name="idade"]:checked').value;
-  const peso = parseFloat(document.getElementById("peso").value);
-  const resultado = document.getElementById("resultadoCalc");
-
-  resultado.innerHTML = "";
-
-  if (!idade || !peso) {
-    resultado.innerHTML = "Preencha todos os campos.";
-    return;
-  }
-
-  if (idade === "menos2" || peso < 1.3) {
-    resultado.innerHTML =
-      `<div class='no-result'>
-        <span>⚠️ Para cães com menos de 2 meses ou abaixo de 1,3Kg recomendamos entrar em contato!</span>
-        <a target="_blank" href="https://api.whatsapp.com/send/?phone=5551985451245&text=Ol%C3%A1%21+Gostaria+de+saber+sobre+quais+op%C3%A7%C3%B5es+antipulgas+e+carrapatos+posso+dar+para+o+meu+c%C3%A3o.+Ele+tem+${peso}Kg+e+menos+de+2+meses%21&type=phone_number&app_absent=0">
-          <p>Entre em contato e veja quais as indicações!</p>
-        </a>
-      </div>`;
-    return;
-  }
-
-  let recomendacoes = [];
-
-   // ===== NexGard =====
-  if (peso < 2)
-    recomendacoes = []
-  else if (peso >= 2 && peso <= 4)
-    recomendacoes.push(criarCard("NexGard", "2 – 4 Kg", "images/antipulgas/NEX-P.png"));
-  else if (peso <= 10)
-    recomendacoes.push(criarCard("NexGard", "4 – 10 Kg", "images/antipulgas/NEX-M.png"));
-  else if (peso <= 25)
-    recomendacoes.push(criarCard("NexGard", "10 – 25 Kg", "images/antipulgas/NEX-G.png"));
-  else if (peso <= 50)
-    recomendacoes.push(criarCard("NexGard", "25 – 50 Kg", "images/antipulgas/NEX-GG.png"));
-
-  // ===== Credeli =====
-  if (peso >= 1.3 && peso <= 2.5)
-    recomendacoes.push(criarCard("Credeli", "1,3 – 2,5 Kg", "images/antipulgas/credeli-1.png"));
-  else if (peso <= 5.5)
-    recomendacoes.push(criarCard("Credeli", "2,5 – 5,5 Kg", "images/antipulgas/credeli-2.png"));
-  else if (peso <= 11)
-    recomendacoes.push(criarCard("Credeli", "5,5 – 11 Kg", "images/antipulgas/credeli-3.png"));
-  else if (peso <= 22)
-    recomendacoes.push(criarCard("Credeli", "11 – 22 Kg", "images/antipulgas/credeli-4.png"));
-  else if (peso <= 45)
-    recomendacoes.push(criarCard("Credeli", "22 – 45 Kg", "images/antipulgas/credeli-5.png"));
-
-  // ===== Simparic =====
-  if (peso >= 1.3 && peso <= 2.5)
-    recomendacoes.push(criarCard("Simparic", "1,3 – 2,5 Kg", "images/antipulgas/sim-1.png"));
-  else if (peso <= 5)
-    recomendacoes.push(criarCard("Simparic", "2,6 – 5 Kg", "images/antipulgas/sim-2.png"));
-  else if (peso <= 10)
-    recomendacoes.push(criarCard("Simparic", "5,1 – 10 Kg", "images/antipulgas/sim-3.png"));
-  else if (peso <= 20)
-    recomendacoes.push(criarCard("Simparic", "10 – 20 Kg", "images/antipulgas/sim-4.png"));
-  else if (peso <= 40)
-    recomendacoes.push(criarCard("Simparic", "20 – 40 Kg", "images/antipulgas/sim-5.png"));
-  else if (peso <= 60)
-    recomendacoes.push(criarCard("Simparic", "40 – 60 Kg", "images/antipulgas/sim-6.png"));
-
-  if (recomendacoes.length === 0) {
-    resultado.innerHTML = `
-      <div class='no-result'>
-        <span>⚠️ Não há recomendações diretas para o peso informado.</span>
-        <a target="_blank" href="https://api.whatsapp.com/send/?phone=5551985451245&text=Ol%C3%A1%21+Gostaria+de+saber+sobre+quais+comprimidos+antipulgas+e+carrapatos+posso+dar+para+o+meu+c%C3%A3o.+Ele+tem+${peso}Kg%21&type=phone_number&app_absent=0">
-          <p>Entre em contato e veja quais as indicações!</p>
-        </a>
-      </div>`;
-    return;
-  }
-if (peso > 45) {
-  resultado.innerHTML = `
-    <div class="cards-container">
-      ${recomendacoes.join("")}
-    </div>
-  `;
-}
-else {
-    resultado.innerHTML = `
-      <div class="cards-container">
-        ${recomendacoes.join("")}
-      </div>
-  `;
-}
-
-}
-</script>
+<script src="app.js"></script>
 </body>
 </html>
 <!--
