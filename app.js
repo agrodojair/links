@@ -7,11 +7,11 @@ calcHeader.addEventListener("click", function() {
 });
 
 function criarCard(nome, faixa, imagem) {
-  const destaque = nome === "Credeli" ? "card-destaque" : "";
+  const destaque = nome === "WellPet" ? "card-destaque" : "";
 
   return `
     <div class="produto-card ${destaque}">
-      ${nome === "Credeli" ? `
+      ${nome === "WellPet" ? `
         <div class="selo">
           <img src="images/selo.png">
         </div>
@@ -56,6 +56,7 @@ function calcular() {
 
   let recomendacoes = [];
 
+
    // ===== NexGard =====
   if (peso < 2)
     recomendacoes = []
@@ -67,6 +68,20 @@ function calcular() {
     recomendacoes.push(criarCard("NexGard", "10 – 25 Kg", "images/antipulgas/NEX-G.png"));
   else if (peso <= 50)
     recomendacoes.push(criarCard("NexGard", "25 – 50 Kg", "images/antipulgas/NEX-GG.png"));
+
+  // ===== WellPet =====
+  if (peso < 2)
+    recomendacoes = [];
+  else if (peso >= 2 && peso <= 4.5)
+    recomendacoes.push(criarCard("WellPet", "2 – 4.5 Kg", "images/antipulgas/well-1.jpeg"));
+  else if (peso <= 10)
+    recomendacoes.push(criarCard("WellPet", "4,5 – 10 Kg", "images/antipulgas/well-2.jpeg"));
+  else if (peso <= 20)
+    recomendacoes.push(criarCard("WellPet", "10,1 – 20 Kg", "images/antipulgas/well-3.jpeg"));
+  else if (peso <= 40)
+    recomendacoes.push(criarCard("WellPet", "20,1 – 40 Kg", "images/antipulgas/well-4.jpeg"));
+  else if (peso <= 56)
+    recomendacoes.push(criarCard("WellPet", "40,1 – 56 Kg", "images/antipulgas/well-5.jpeg"));
 
   // ===== Credeli =====
   if (peso >= 1.3 && peso <= 2.5)
@@ -93,6 +108,9 @@ function calcular() {
     recomendacoes.push(criarCard("Simparic", "20 – 40 Kg", "images/antipulgas/sim-5.png"));
   else if (peso <= 60)
     recomendacoes.push(criarCard("Simparic", "40 – 60 Kg", "images/antipulgas/sim-6.png"));
+
+
+
 
   if (recomendacoes.length === 0) {
     resultado.innerHTML = `
