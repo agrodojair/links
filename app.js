@@ -73,15 +73,15 @@ function calcular() {
   if (peso < 2)
     recomendacoes = [];
   else if (peso >= 2 && peso <= 4.5)
-    recomendacoes.push(criarCard("WellPet", "2 – 4.5 Kg", "images/antipulgas/well-1.jpeg"));
+    recomendacoes.push(criarCard("WellPet", "2 – 4.5 Kg", "images/antipulgas/well-1.jpg"));
   else if (peso <= 10)
-    recomendacoes.push(criarCard("WellPet", "4,5 – 10 Kg", "images/antipulgas/well-2.jpeg"));
+    recomendacoes.push(criarCard("WellPet", "4,5 – 10 Kg", "images/antipulgas/well-2.jpg"));
   else if (peso <= 20)
-    recomendacoes.push(criarCard("WellPet", "10,1 – 20 Kg", "images/antipulgas/well-3.jpeg"));
+    recomendacoes.push(criarCard("WellPet", "10,1 – 20 Kg", "images/antipulgas/well-3.jpg"));
   else if (peso <= 40)
-    recomendacoes.push(criarCard("WellPet", "20,1 – 40 Kg", "images/antipulgas/well-4.jpeg"));
+    recomendacoes.push(criarCard("WellPet", "20,1 – 40 Kg", "images/antipulgas/well-4.jpg"));
   else if (peso <= 56)
-    recomendacoes.push(criarCard("WellPet", "40,1 – 56 Kg", "images/antipulgas/well-5.jpeg"));
+    recomendacoes.push(criarCard("WellPet", "40,1 – 56 Kg", "images/antipulgas/well-5.jpg"));
 
   // ===== Credeli =====
   if (peso >= 1.3 && peso <= 2.5)
