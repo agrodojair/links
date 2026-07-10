@@ -539,6 +539,15 @@ input[type="radio"]:checked::before {
   font-size: 15px;
 }
 
+.end-c-botao {
+  display: flex;
+  flex-direction: row;
+}
+
+.end-c-botao a{
+  margin-left: auto;
+}
+
 @media (max-width: 900px) {
   .produto-info strong{
     font-size: 10px;
