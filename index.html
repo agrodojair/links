@@ -13,8 +13,581 @@
   <meta property="og:description" content="Clique e acesse nossos links úteis!" />
   <meta property="og:image" content="https://agrodojair.github.io/links/images/cover-meta.jpg" />
   <meta property="og:url" content="agrodojair.github.io/links" />
-  <link rel="stylesheet" href="style.css">
   <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Delius&family=Fuzzy+Bubbles:wght@400;700&family=Open+Sans:ital,wdth,wght@0,75..100,300..800;1,75..100,300..800&display=swap');
+
+    @font-face {
+      font-family: "tommy-light";
+      src: url(fonts/tommy-light.otf);
+    }
+
+    @font-face {
+      font-family: "tommy-regular";
+      src: url(fonts/tommy-regular.otf);
+    }
+
+    :root{
+      --font1: "tommy-light", sans;
+      --font2: "tommy-regular", sans;
+    }
+
+    *{
+      box-sizing: border-box;
+      padding: 0;
+      margin: 0;
+      font-family: var(--font1);
+    }
+
+    body{
+      padding: 20px;
+    }
+
+    p, a, h1, h2, h5, h3, span{
+      -webkit-user-select: none;
+      -khtml-user-select: none;
+      -moz-user-select: none;
+      -o-user-select: none;
+      user-select: none;
+    }
+
+    .info-flex{
+      justify-self: center;
+      display: flex;
+      gap: 10px;
+      flex-direction: row;
+    }
+
+    .info-flex img{
+      margin-top: 18px;
+    }
+
+    #myVideo {
+      filter: blur(6px);
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      min-width: 100%;
+      min-height: 100%;
+    }
+
+    .conteudo-total {
+      position: relative;
+    }
+
+    a{
+      text-decoration: none;
+    }
+
+    .logo-top{
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 50px;
+    }
+
+    .logo-top video{
+      margin: 0;
+      width: 250px;
+      height: 250px;
+      border-radius: 50px;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.397);
+    }
+
+    .store-info{
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      margin-top: 10PX;
+      color: white;
+      text-shadow: 0px 0px 5px black;
+    }
+
+    .store-info h1{
+      font-size: 3em;
+      font-family: var(--font2);
+    }
+
+    .store-info h2{
+      font-size: 1em;
+      margin-top: 10px;
+    }
+
+    .social-medias{
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;;
+    }
+
+    .social-medias img{
+      margin: 5px;
+      width: 45px;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .social-medias img:hover{
+      scale: 1.07;
+    }
+
+    .buttons{
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    #cat span, #chat span{
+      font-family: var(--font1);
+    }
+
+    .custom-button{
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.267);
+      font-size: 20px;
+      padding: 10px;
+      margin-top: 20px;
+      width: 95vw;
+      max-width: 420px;
+      height: auto;
+      background-color: rgb(224, 215, 204);
+      border-radius: 20px;
+      transition: all 0.2s ease-in-out;
+      font-weight: bolder;
+      color: #292015;
+      box-shadow: 3px 3px 0px #634e33;
+      border: 2px solid #634e33;
+    }
+
+    .custom-button-map{
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.267);
+      font-size: 20px;
+      padding: 10px;
+      margin-top: 20px;
+      width: 95vw;
+      max-width: 420px;
+      height: auto;
+      background-color: rgb(224, 215, 204);
+      border-radius: 20px;
+      transition: all 0.2s ease-in-out;
+      font-weight: bolder;
+      color: #292015;
+      box-shadow: 3px 3px 0px #634e33;
+      border: 2px solid #634e33;
+    }
+
+    .map-info h3{
+      font-size: 25px;
+    }
+
+    .map-info p{
+      font-size: 14px;
+      margin-top: 10px;
+    }
+
+    .map-info a{
+      margin-top: 15px;
+      display:inline-block;
+      background:#2E7D32;
+      color:#fff;
+      padding:10px 16px;
+      border-radius:10px;
+      font-size:13px;
+      text-decoration:none;
+      transition:.2s;
+    }
+
+    .whatsapp-button {
+      display: flex;
+      justify-content: center;
+      position: relative;
+      cursor: pointer;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.267);
+      font-size: 20px;
+      padding: 10px;
+      margin-top: 20px;
+      width: 95vw;
+      max-width: 420px;
+      height: auto;
+      background-color: rgb(224, 215, 204);
+      border-radius: 20px;
+      transition: all 0.2s ease-in-out;
+      font-weight: bolder;
+      color: #292015;
+      box-shadow: 3px 3px 0px #634e33;
+      border: 2px solid #634e33;
+    }
+
+    .custom-button svg, .custom-button img{
+      position: absolute;
+      left: 15px;
+      margin-top: -10px;
+    }
+
+    #instagram-button img{
+      margin-bottom: -7px;
+    }
+
+    #canal img{
+      margin-bottom: -7px;
+    }
+
+    #uber svg{
+      width: 30px;
+      margin-bottom: -9px;
+    }
+
+    #cat svg{
+      width: 30px;
+      margin-bottom: -7px;
+    }
+
+    #chat svg{
+      width: 30px;
+      margin-bottom: -7px;
+    }
+
+    #avalie svg{
+      width: 30px;
+      margin-bottom: -8px;
+    }
+
+    .map-info{
+      text-align: left;
+    }
+
+    .custom-button:hover{
+      scale: 1.02;
+    }
+
+    .custom-button-map:hover{
+      scale: 1.02;
+    }
+
+    iframe{
+      width: 100%;
+      height: 200px;
+      border-radius: 15px;
+      margin-bottom: 10px;
+    }
+
+    footer{
+      text-align: center;
+      margin: 25px;
+      color: white;
+      opacity: 15%;
+      text-decoration: none;
+    }
+
+    .whatsapp-container {
+      position: relative;
+      width: fit-content;
+    }
+
+    .whatsapp-button svg{
+      position: absolute;
+      left: 15px;
+      margin-top: -4px;
+    }
+
+    .whatsapp-button:hover {
+      transform: scale(1.03);
+    }
+
+    .whatsapp-form {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      max-height: 0;
+      opacity: 0;
+      transition: all 0.4s ease;
+      display: flex;
+      gap: 3px;
+      margin-top: 10px;
+    }
+
+    .whatsapp-form.active {
+      max-height: 650px;
+      opacity: 1;
+    }
+
+    .whatsapp-form input {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      flex: 1;
+    }
+
+    .whatsapp-form input:focus {
+      outline: none;
+    }
+
+    .whatsapp-form button {
+      background-color: #25d366;
+      border: 1px solid #0f5328;
+      color: #ffffff;
+      height: 40px;
+      font-size: 20px;
+      font-weight: bolder;
+      padding: 4px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .whatsapp-form button:hover {
+      background-color: #1ebc57;
+    }
+
+    #whatsappButton svg{
+      width: 30px;
+      margin-bottom: -7px;
+    }    
+
+    #instagram-button svg{
+      width: 30px;
+      margin-bottom: -7px;
+    }
+
+    #map-box img{
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      border-radius: 15px;
+    }
+
+    .calc-expand {
+      flex-direction: column;
+      align-items: stretch;
+      cursor: pointer;
+      transition: all 0.4s ease;
+      overflow: hidden;
+    }
+
+    .calc-header {
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .calc-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+    }
+
+    .calc-expand.active .calc-content {
+      max-height: 2000px;
+      margin-top: 15px;
+    }
+
+    .calc-content input,
+    .calc-content select,
+    .calc-content button {
+      width: 100%;
+      padding: 8px;
+      margin-top: 8px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    .calc-content button {
+      background: #2e7d32;
+      color: white;
+      font-size: 15px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .cards-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 15px;
+    }
+
+    .card-destaque {
+      position: relative;
+    }
+
+    .card-destaque .selo {
+      position: absolute;
+      top: -10px;
+      left: -10px;
+      z-index: 5;
+    }
+
+    .card-destaque .selo img {
+      width: 180px;
+      height: auto;
+    }
+
+    .produto-card {
+      background: white;
+      border-radius: 18px;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+      text-align: center;
+      transition: transform 0.2s ease;
+      overflow: visible;
+      position: relative;
+    }
+
+    .produto-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .produto-card img {
+      all: unset;
+      display: block;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .produto-img {
+      background: #f7f7f7;
+      padding: 16px;
+      border-radius: 18px;
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .produto-img img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .produto-info {
+      background: #0d5c2f;
+      color: white;
+      padding: 14px;
+      border-radius: 18px;
+    }
+
+    .produto-info h4 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .produto-info p {
+      margin: 5px 0;
+      font-size: 14px;
+    }
+
+    .produto-info strong {
+      background: #2E7D32;
+      color: white;
+      margin-top: 50px;
+      padding: 6px;
+      border-radius: 5px;
+      font-size: 12px;
+    }
+
+    .radio-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-top: 8px;
+      margin-bottom: 25px;
+    }
+
+    input[type="radio"] {
+      appearance: none;
+
+      width: 18px;
+      height: 18px;
+      border: 2px solid #000000;
+      border-radius: 50%;
+      position: relative;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    input[type="radio"]::before {
+      content: "";
+      position: absolute;
+      inset: 3px;
+      border-radius: 50%;
+      background: #2e7d32;
+      transform: scale(0);
+      transition: 0.2s ease;
+    }
+
+    input[type="radio"]:checked::before {
+      transform: scale(1);
+    }
+
+    .radio-option {
+      display: flex;
+      margin-top: 15px;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .radio-option label {
+      white-space: nowrap;
+      margin-left: 10px;
+      font-size: 18px;
+    }
+
+    .radio-option input {
+      accent-color: #0d5c2f;
+      cursor: pointer;
+    }
+
+    .no-result p {
+      background: #2E7D32;
+      color: white;
+      margin-top: 15px;
+      padding: 6px;
+      border-radius: 10px;
+      font-size: 15px;
+    }
+
+    .end-c-botao {
+      display: flex;
+      flex-direction: row;
+    }
+
+    .end-c-botao a{
+      margin-left: auto;
+    }
+
+    @media (max-width: 900px) {
+      .produto-info strong{
+        font-size: 10px;
+      }
+    }
+
+    #dif_racoes svg{
+      width: 30px;
+      margin-bottom: -9px;
+    }
+
+    #dif_racoes p{
+      font-size: 14px;
+      margin-top: 5px;
+      color: #292015;
+      width: 80%;
+    }
+
+    #dif_racoes {
+      flex-direction: column;
+      align-items: center;
+    }
+  </style>
 </head>
 <body>
 
