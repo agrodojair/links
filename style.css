@@ -553,3 +553,20 @@ input[type="radio"]:checked::before {
     font-size: 10px;
   }
 }
+
+#dif_racoes svg{
+  width: 30px;
+  margin-bottom: -9px;
+}
+
+#dif_racoes p{
+  font-size: 14px;
+  margin-top: 5px;
+  color: #292015;
+  width: 80%;
+}
+
+#dif_racoes {
+  flex-direction: column;
+  align-items: center;
+}
