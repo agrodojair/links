@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <!--
+    CSP: só permite o que a página realmente usa.
+    - scripts: apenas racoes.js (mesmo site) e o SDK oficial do Firebase (gstatic)
+    - conexões: apenas Firestore/Auth do Google
+    - imagens: do próprio site (agrodojair.github.io)
+  -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com; connect-src https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; img-src 'self' https://agrodojair.github.io; media-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; frame-src https://racoes-f0291.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none';">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <title>Níveis de garantia | Agro do Jair</title>
+  <meta name="description" content="Consulte os níveis de garantia das rações do Agro do Jair - Agropecuária em Tramandaí - RS.">
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+  <style>
+    @font-face { font-family: "tommy-light";   src: url(fonts/tommy-light.otf); }
+    @font-face { font-family: "tommy-regular"; src: url(fonts/tommy-regular.otf); }
+
+    :root{
+      --font1: "tommy-light", sans-serif;
+      --font2: "tommy-regular", sans-serif;
+      --bege: rgb(224, 215, 204);
+      --marrom: #634e33;
+      --texto: #292015;
+      --verde: #2E7D32;
+    }
+
+    *{ box-sizing: border-box; padding: 0; margin: 0; font-family: var(--font1); }
+    [hidden]{ display: none !important; }
+
+    body{ padding: 20px; min-height: 100vh; }
+    body.modal-aberto{ overflow: hidden; }
+
+    a{ text-decoration: none; color: inherit; }
+
+    /* Vídeo de fundo (igual ao index) */
+    #myVideo{
+      filter: blur(6px);
+      position: fixed;
+      right: 0; bottom: 0;
+      min-width: 100%; min-height: 100%;
+      object-fit: cover;
+      z-index: -1;
+    }
+
+    /* Animação de entrada (igual ao index) */
+    @keyframes fadeInUp{
+      from{ opacity: 0; transform: translateY(20px); }
+      to{   opacity: 1; transform: translateY(0); }
+    }
+    .fade-item{
+      opacity: 0;
+      animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation-delay: calc(var(--i, 0) * 80ms);
+    }
+
+    .conteudo{
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .voltar{
+      align-self: flex-start;
+      color: #fff;
+      text-shadow: 0 0 5px black;
+      font-size: 15px;
+      font-weight: bolder;
+    }
+    .voltar:hover{ text-decoration: underline; }
+
+    /* Cabeçalho */
+    .topo{
+      text-align: center;
+      margin-top: 18px;
+      color: #fff;
+      text-shadow: 0 0 5px black;
+    }
+    .topo h1{ font-size: 2.4em; font-family: var(--font2); }
+    .topo h2{ font-size: 1em; margin-top: 8px; }
+
+    /* Cartão bege (mesmo estilo dos botões do index) */
+    .cartao{
+      width: 95vw;
+      max-width: 420px;
+      background-color: var(--bege);
+      border: 2px solid var(--marrom);
+      border-radius: 20px;
+      box-shadow: 3px 3px 0px var(--marrom);
+      color: var(--texto);
+      padding: 16px;
+      margin-top: 20px;
+    }
+    .cartao h3{ font-size: 20px; font-family: var(--font2); }
+    .legenda{
+      display: block;
+      font-size: 13px;
+      font-weight: bolder;
+      margin-bottom: 6px;
+    }
+    .dica{ font-size: 13px; margin-top: 8px; opacity: .8; }
+
+    /* Busca */
+    .busca{ display: flex; gap: 8px; }
+    .busca input{ flex: 1; min-width: 0; }
+    input, select{
+      padding: 10px 12px;
+      border: 1px solid var(--marrom);
+      border-radius: 10px;
+      font-size: 16px;
+      background: #fff;
+      color: var(--texto);
+    }
+    input:focus{ outline: 2px solid var(--verde); outline-offset: 1px; }
+    button{
+      padding: 10px 16px;
+      background: var(--verde);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: bolder;
+      cursor: pointer;
+      transition: background .2s, scale .2s;
+    }
+    button:hover{ background: #1f5e23; }
+    button.sec{ background: #777; }
+    button.sec:hover{ background: #555; }
+    button.perigo{ background: #b3261e; }
+    button.perigo:hover{ background: #8c1d18; }
+    button:disabled{ opacity: .6; cursor: wait; }
+
+    /* Estado (carregando / erro / não encontrado) */
+    .estado{
+      width: 95vw; max-width: 420px;
+      margin-top: 15px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      background: var(--verde);
+      color: #fff;
+      font-size: 15px;
+      text-align: center;
+    }
+    .estado.erro{ background: #b3261e; }
+
+    /* Resultado */
+    .resultado{ display: flex; flex-direction: column; align-items: center; width: 100%; }
+
+    .foto{
+      margin-top: 30px;
+      width: min(70vw, 260px);
+      aspect-ratio: 1 / 1;            /* sempre quadrada */
+      background: #fff;
+      border: 2px solid var(--marrom);
+      border-radius: 36px;
+      box-shadow: 0 0 10px rgba(0,0,0,.4);
+      display: flex;
+      align-items: center;            /* centraliza na vertical */
+      justify-content: center;        /* centraliza na horizontal */
+      overflow: hidden;
+    }
+    .foto img{
+      width: 100%; height: 100%;
+      object-fit: contain;            /* mostra inteira, sem distorcer */
+      display: block;
+    }
+    .foto .sem-foto{ color: #8a7a64; font-size: 14px; text-align: center; padding: 10px; }
+
+    .identificacao{
+      text-align: center;
+      margin-top: 18px;
+      color: #fff;
+      text-shadow: 0 0 5px black;
+      width: 95vw; max-width: 420px;
+    }
+    .identificacao .rotulo{ font-size: 12px; letter-spacing: .12em; text-transform: uppercase; opacity: .85; }
+    .identificacao h2{ font-size: 1.8em; font-family: var(--font2); line-height: 1.15; margin-top: 2px; overflow-wrap: anywhere; }
+    .identificacao .codigo{ margin-top: 8px; font-size: 13px; opacity: .75; }
+
+    .tabela-card{ margin-top: 40px; }   /* espaçamento entre o código e a tabela */
+    table{ width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th{
+      text-align: left;
+      font-size: 12px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      padding: 6px 0;
+      border-bottom: 2px solid var(--marrom);
+    }
+    th:last-child, td:last-child{ text-align: right; }
+    td{ padding: 9px 0; border-bottom: 1px dashed rgba(99,78,51,.5); font-size: 16px; }
+    td:last-child{ font-weight: bolder; white-space: nowrap; padding-left: 12px; }
+    tr:last-child td{ border-bottom: none; }
+
+    footer{
+      text-align: center;
+      margin: 25px;
+      color: #fff;
+      opacity: 15%;
+      font-size: 14px;
+    }
+    footer button{
+      background: none; border: none; color: inherit; font-size: inherit;
+      padding: 0 4px; cursor: pointer; text-decoration: underline;
+    }
+    footer button:hover{ background: none; }
+
+    /* ===== Painel administrativo ===== */
+    .admin{
+      position: fixed; inset: 0;
+      background: rgba(41, 32, 21, .88);
+      overflow-y: auto;
+      z-index: 100;
+      padding: 16px;
+    }
+    .admin-caixa{
+      background: var(--bege);
+      border: 2px solid var(--marrom);
+      box-shadow: 3px 3px 0 var(--marrom);
+      border-radius: 20px;
+      color: var(--texto);
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .admin-topo{ display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .admin h3{ font-size: 20px; font-family: var(--font2); }
+    .admin section{ margin-top: 22px; padding-top: 18px; border-top: 2px dashed rgba(99,78,51,.5); }
+    .admin label{ display: block; font-size: 13px; font-weight: bolder; margin-top: 10px; margin-bottom: 4px; }
+    .admin input[type=text], .admin input[type=email], .admin input[type=password]{ width: 100%; }
+    .grade{ display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+    @media (max-width: 480px){ .grade{ grid-template-columns: 1fr; } }
+    .linha-botoes{ display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+    .msg{ margin-top: 12px; padding: 8px 12px; border-radius: 10px; background: var(--verde); color: #fff; font-size: 14px; }
+    .msg.erro{ background: #b3261e; }
+    .lista{ list-style: none; margin-top: 10px; max-height: 320px; overflow-y: auto; border: 1px solid var(--marrom); border-radius: 10px; background: #fff; }
+    .lista li{ display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px solid #eee; font-size: 14px; }
+    .lista li:last-child{ border-bottom: none; }
+    .lista .cod{ font-weight: bolder; min-width: 44px; }
+    .lista .nom{ flex: 1; overflow-wrap: anywhere; }
+    .lista button{ padding: 5px 9px; font-size: 12px; }
+    .lista a{ font-size: 12px; text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <video autoplay muted loop playsinline id="myVideo" aria-hidden="true">
+    <source src="images/bg-site-webm.webm" type="video/webm">
+    <source src="images/bg-site.mp4" type="video/mp4">
+  </video>
+
+  <div class="conteudo">
+    <a class="voltar" href="./">← Voltar aos links</a>
+
+    <div class="topo fade-item">
+      <h1>Agro do Jair</h1>
+      <h2>Níveis de garantia das rações</h2>
+    </div>
+
+    <!-- Pesquisa por código -->
+    <form class="cartao fade-item" id="formBusca" style="--i: 1;" autocomplete="off">
+      <label class="legenda" for="campoCodigo">Buscar ração pelo código</label>
+      <div class="busca">
+        <input type="text" id="campoCodigo" inputmode="numeric" maxlength="8" placeholder="Ex: 0151" aria-describedby="dicaBusca">
+        <button type="submit">Buscar</button>
+      </div>
+      <p class="dica" id="dicaBusca">O código está na etiqueta da prateleira.</p>
+    </form>
+
+    <div class="estado" id="estado" role="status" aria-live="polite" hidden></div>
+
+    <!-- Resultado -->
+    <div class="resultado" id="resultado" hidden>
+      <div class="foto fade-item" id="foto" style="--i: 0;"></div>
+
+      <div class="identificacao fade-item" style="--i: 1;">
+        <div class="rotulo">Ração</div>
+        <h2 id="nomeRacao"></h2>
+        <div class="codigo">Código: <span id="codigoRacao"></span></div>
+      </div>
+
+      <div class="cartao tabela-card fade-item" style="--i: 2;">
+        <h3>Níveis de garantia</h3>
+        <table>
+          <thead><tr><th scope="col">Nutriente</th><th scope="col">Garantia</th></tr></thead>
+          <tbody id="tabelaNiveis"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <footer>
+      <a href="https://github.com/joaovitorjeremias" target="_blank" rel="noopener noreferrer">&copy; João Vitor</a>
+      · <button type="button" id="abrirAdmin">Área restrita</button>
+    </footer>
+  </div>
+
+  <noscript><div class="estado erro" style="margin: 20px auto;">Ative o JavaScript para consultar as rações.</div></noscript>
+
+  <!-- Painel administrativo (protegido por login; a segurança real está nas regras do Firestore) -->
+  <div class="admin" id="admin" hidden role="dialog" aria-modal="true" aria-label="Área restrita">
+    <div class="admin-caixa">
+
+      <!-- Login -->
+      <div id="viewLogin">
+        <div class="admin-topo">
+          <h3>Área restrita</h3>
+          <button type="button" class="sec" data-fechar-admin>Fechar</button>
+        </div>
+        <form id="formLogin" autocomplete="on">
+          <label for="loginEmail">E-mail</label>
+          <input type="email" id="loginEmail" autocomplete="username" required>
+          <label for="loginSenha">Senha</label>
+          <input type="password" id="loginSenha" autocomplete="current-password" required>
+          <div class="linha-botoes"><button type="submit" id="btnEntrar">Entrar</button></div>
+        </form>
+        <div class="msg erro" id="msgLogin" hidden></div>
+      </div>
+
+      <!-- Painel -->
+      <div id="viewPainel" hidden>
+        <div class="admin-topo">
+          <h3>Painel de rações</h3>
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="sec" id="btnSair">Sair</button>
+            <button type="button" class="sec" data-fechar-admin>Fechar</button>
+          </div>
+        </div>
+        <p class="dica" id="logadoComo"></p>
+
+        <section>
+          <h3 id="tituloForm">Adicionar ração</h3>
+          <p class="dica">Deixe em branco (ou 0) o que a ração não tem: isso não aparecerá na página. Use vírgula ou ponto nos decimais.</p>
+          <form id="formRacao" autocomplete="off">
+            <label for="fCodigo">Código</label>
+            <input type="text" id="fCodigo" inputmode="numeric" maxlength="8" placeholder="Ex: 151 ou 0151" required>
+            <label for="fNome">Nome da ração (descrição)</label>
+            <input type="text" id="fNome" maxlength="120" placeholder="Ex: BILLY CAT CASTRADOS KG" required>
+            <div class="grade" id="gradeNutrientes"></div>
+            <div class="linha-botoes">
+              <button type="submit" id="btnSalvar">Salvar ração</button>
+              <button type="button" class="sec" id="btnLimpar">Limpar formulário</button>
+            </div>
+          </form>
+          <div class="msg" id="msgForm" hidden></div>
+        </section>
+
+        <section>
+          <h3>Rações cadastradas <span id="contagem"></span></h3>
+          <label for="filtroLista">Filtrar por código ou nome</label>
+          <input type="text" id="filtroLista" placeholder="Digite para filtrar…">
+          <ul class="lista" id="lista"></ul>
+        </section>
+
+        <section>
+          <h3>Importar planilha</h3>
+          <p class="dica">Selecione o arquivo <strong>racoes-dados.json</strong>. Rações com o mesmo código serão substituídas.</p>
+          <label for="arquivoImport">Arquivo JSON</label>
+          <input type="file" id="arquivoImport" accept="application/json,.json">
+          <div class="linha-botoes"><button type="button" id="btnImportar">Importar</button></div>
+          <div class="msg" id="msgImport" hidden></div>
+        </section>
+      </div>
+
+    </div>
+  </div>
+
+  <script type="module" src="racoes.js"></script>
+</body>
+</html>
