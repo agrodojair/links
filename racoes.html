@@ -105,7 +105,7 @@
     /* Busca */
     .busca{ display: flex; gap: 8px; }
     .busca input{ flex: 1; min-width: 0; }
-    input, select{
+    input, select, textarea{
       padding: 10px 12px;
       border: 1px solid var(--marrom);
       border-radius: 10px;
@@ -194,6 +194,14 @@
     td:last-child{ font-weight: bolder; white-space: nowrap; padding-left: 12px; }
     tr:last-child td{ border-bottom: none; }
 
+    .composicao p{
+      margin-top: 10px;
+      font-size: 15px;
+      line-height: 1.45;
+      white-space: pre-line;     /* respeita as quebras de linha digitadas */
+      overflow-wrap: anywhere;
+    }
+
     footer{
       text-align: center;
       margin: 25px;
@@ -229,7 +237,8 @@
     .admin h3{ font-size: 20px; font-family: var(--font2); }
     .admin section{ margin-top: 22px; padding-top: 18px; border-top: 2px dashed rgba(99,78,51,.5); }
     .admin label{ display: block; font-size: 13px; font-weight: bolder; margin-top: 10px; margin-bottom: 4px; }
-    .admin input[type=text], .admin input[type=email], .admin input[type=password]{ width: 100%; }
+    .admin input[type=text], .admin input[type=email], .admin input[type=password], .admin textarea{ width: 100%; }
+    .admin textarea{ min-height: 110px; resize: vertical; }
     .grade{ display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
     @media (max-width: 480px){ .grade{ grid-template-columns: 1fr; } }
     .linha-botoes{ display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
@@ -252,6 +261,7 @@
   </video>
 
   <div class="conteudo">
+    <a class="voltar" href="./">← Voltar aos links</a>
 
     <div class="topo fade-item">
       <h1>Agro do Jair</h1>
@@ -286,6 +296,11 @@
           <thead><tr><th scope="col">Nutriente</th><th scope="col">Garantia</th></tr></thead>
           <tbody id="tabelaNiveis"></tbody>
         </table>
+      </div>
+
+      <div class="cartao composicao fade-item" id="cartaoComposicao" style="--i: 3;" hidden>
+        <h3>Composição</h3>
+        <p id="composicaoRacao"></p>
       </div>
     </div>
 
@@ -337,6 +352,8 @@
             <label for="fNome">Nome da ração (descrição)</label>
             <input type="text" id="fNome" maxlength="120" placeholder="Ex: BILLY CAT CASTRADOS KG" required>
             <div class="grade" id="gradeNutrientes"></div>
+            <label for="fComposicao">Composição (aparece abaixo da tabela; opcional)</label>
+            <textarea id="fComposicao" maxlength="3000" placeholder="Ex: Milho, farelo de soja, farinha de carne e ossos..."></textarea>
             <div class="linha-botoes">
               <button type="submit" id="btnSalvar">Salvar ração</button>
               <button type="button" class="sec" id="btnLimpar">Limpar formulário</button>
