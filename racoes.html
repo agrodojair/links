@@ -30,20 +30,19 @@
     *{ box-sizing: border-box; padding: 0; margin: 0; font-family: var(--font1); }
     [hidden]{ display: none !important; }
 
-    body{ padding: 20px; min-height: 100vh; }
+    body{
+      padding: 20px;
+      min-height: 100vh;
+      background-color: #292015;
+      background-image: url("images/bg_img.png");
+      background-repeat: no-repeat;
+      background-position: top center;
+      background-size: cover;
+      background-attachment: scroll;
+    }
     body.modal-aberto{ overflow: hidden; }
 
     a{ text-decoration: none; color: inherit; }
-
-    /* Vídeo de fundo (igual ao index) */
-    #myVideo{
-      filter: blur(6px);
-      position: fixed;
-      right: 0; bottom: 0;
-      min-width: 100%; min-height: 100%;
-      object-fit: cover;
-      z-index: -1;
-    }
 
     /* Animação de entrada (igual ao index) */
     @keyframes fadeInUp{
@@ -254,11 +253,6 @@
   </style>
 </head>
 <body>
-
-  <video autoplay muted loop playsinline id="myVideo" aria-hidden="true">
-    <source src="images/bg-site-webm.webm" type="video/webm">
-    <source src="images/bg-site.mp4" type="video/mp4">
-  </video>
 
   <div class="conteudo">
     <a class="voltar" href="./">← Voltar aos links</a>
