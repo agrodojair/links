@@ -550,35 +550,65 @@
     }
 
     /* ---------- Mapa ---------- */
-    .custom-button-map{ font-size: 20px; }
-
-    iframe{
-      display: block;
-      width: 100%;
-      height: 210px;
-      border: 0;
-      border-radius: 14px;
-      margin-bottom: 12px;
+    .custom-button-map{
+      padding: 0;
+      overflow: hidden;
+      font-size: 20px;
     }
 
-    .map-info{ text-align: left; }
+    .map-frame{
+      position: relative;
+      height: 240px;
+      background: #d9cfc1;           /* aparece enquanto o mapa carrega */
+    }
+
+    .map-frame iframe{
+      display: block;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      border: 0;
+      border-radius: 0;
+      filter: sepia(.22) saturate(.85) contrast(1.02);   /* aquece o mapa para combinar com a paleta */
+    }
+
+    /* painel que "flutua" sobre a base do mapa */
+    .map-info{
+      position: relative;
+      margin: -30px 12px 12px;
+      padding: 14px;
+      text-align: left;
+      background: rgb(237, 231, 222);
+      border: 2px solid var(--marrom);
+      border-radius: 16px;
+      box-shadow: 2px 2px 0 var(--marrom);
+    }
+
+    .map-endereco{
+      display: grid;
+      grid-template-columns: 38px 1fr;
+      column-gap: 12px;
+      align-items: start;
+    }
+
+    .map-endereco svg{
+      width: 38px;
+      height: 38px;
+      padding: 8px;
+      border-radius: 12px;
+      background: rgba(46, 125, 50, .14);
+      fill: var(--verde-escuro);
+    }
 
     .map-info h3{
       font-family: var(--font2);
       font-weight: 400;
-      font-size: 25px;
-    }
-
-    .end-c-botao{
-      display: flex;
-      flex-wrap: wrap;
-      align-items: flex-end;
-      justify-content: space-between;
-      gap: 12px;
-      margin-top: 8px;
+      font-size: 22px;
+      line-height: 1.15;
     }
 
     .map-info p{
+      margin-top: 4px;
       font-size: 14px;
       line-height: 1.4;
       -webkit-user-select: text;
@@ -586,16 +616,17 @@
     }
 
     .map-info a{
-      display: inline-flex;
+      display: flex;
       align-items: center;
-      min-height: 44px;
-      margin-left: auto;
+      justify-content: center;
+      min-height: 46px;
+      margin-top: 14px;
       padding: 10px 16px;
       background: var(--verde);
       color: #fff;
       border-radius: 12px;
       font-family: var(--font2);
-      font-size: 14px;
+      font-size: 16px;
       transition: background-color .2s ease;
     }
 
@@ -777,13 +808,18 @@
       </a>
 
       <div class="custom-button-map fade-item" id="map-box" style="--i: 7;">
-        <iframe title="Mapa: localização da Agro do Jair" loading="lazy" src="https://maps.google.com/maps?q=R.%20Crist%C3%B3v%C3%A3o%20Colombo,%20845,%20Tramanda%C3%AD&t=&z=15&ie=UTF8&iwloc=&output=embed" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+        <div class="map-frame">
+          <iframe title="Mapa: localização da Agro do Jair" loading="lazy" src="https://maps.google.com/maps?q=R.%20Crist%C3%B3v%C3%A3o%20Colombo,%20845,%20Tramanda%C3%AD&t=&z=15&ie=UTF8&iwloc=&output=embed" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+        </div>
         <div class="map-info">
-          <h3>Agro do Jair</h3>
-          <div class="end-c-botao">
-            <p>R. Cristóvão Colombo, 845 <br>São Francisco 2, Tramandaí - RS</p>
-            <a href="https://www.google.com/maps/dir/?api=1&destination=R.%20Crist%C3%B3v%C3%A3o%20Colombo,%20845,%20Tramanda%C3%AD" target="_blank" rel="noopener noreferrer">Como chegar →</a>
+          <div class="map-endereco">
+            <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/></svg>
+            <div>
+              <h3>Agro do Jair</h3>
+              <p>R. Cristóvão Colombo, 845 <br>São Francisco 2, Tramandaí - RS</p>
+            </div>
           </div>
+          <a href="https://www.google.com/maps/dir/?api=1&destination=R.%20Crist%C3%B3v%C3%A3o%20Colombo,%20845,%20Tramanda%C3%AD" target="_blank" rel="noopener noreferrer">Como chegar →</a>
         </div>
       </div>
 
