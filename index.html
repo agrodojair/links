@@ -41,6 +41,12 @@
 
     body{
       padding: 20px;
+      background-color: #292015;
+      background-image: url("images/bg_img.png");
+      background-repeat: no-repeat;
+      background-position: top center;
+      background-size: cover;
+      background-attachment: scroll;
     }
 
     p, a, h1, h2, h5, h3, span{
@@ -65,7 +71,7 @@
 
     .fade-item {
       opacity: 0;
-      animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation: fadeInUp 2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
       animation-delay: calc(var(--i, 0) * 80ms);
     }
 
@@ -78,15 +84,6 @@
 
     .info-flex img{
       margin-top: 18px;
-    }
-
-    #myVideo {
-      filter: blur(6px);
-      position: fixed;
-      right: 0;
-      bottom: 0;
-      min-width: 100%;
-      min-height: 100%;
     }
 
     .conteudo-total {
@@ -608,13 +605,6 @@
   </style>
 </head>
 <body>
-
-  <div class="video-bg" poster="images/bg-2.jpg">
-    <video autoplay muted loop playsinline id="myVideo">
-      <source src="images/bg-site-webm.webm" type="video/webm">
-      <source src="images/bg-site.mp4" type="video/mp4">
-    </video>
-  </div>
 
   <div class="conteudo-total">
     <div class="logo-top">
