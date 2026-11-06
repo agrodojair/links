@@ -48,6 +48,16 @@ const CAMPOS = [
   { k: "energia_metabolizavel", l: "Energia Metabolizável",  u: "kcal/kg" }
 ];
 
+// Escala de qualidade, da mais simples à melhor (ordem em que as imagens aparecem).
+// k = valor salvo no banco (também é o prefixo do arquivo: <k>_selected.png / <k>_unselected.png)
+// l = nome exibido (texto alternativo da imagem)
+const QUALIDADES = [
+  { k: "standard",         l: "Standard" },
+  { k: "premium",          l: "Premium" },
+  { k: "premium_especial", l: "Premium Especial" },
+  { k: "super_premium",    l: "Super Premium" }
+];
+
 const $ = (id) => document.getElementById(id);
 const nf = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 4 });
 
@@ -122,10 +132,31 @@ function semFoto(box) {
   box.append(s);
 }
 
+// Imagens da escala: images/qualidades/<qualidade>_selected.png (acesa) ou _unselected.png (apagada)
+const PASTA_QUALIDADES = `${PASTA_IMAGENS}qualidades/`;
+
+function desenharQualidade(valor) {
+  const box = $("escalaQualidade");
+  box.replaceChildren();
+  const atual = QUALIDADES.find((q) => q.k === valor);
+  if (!atual) { box.hidden = true; return; } // sem qualidade cadastrada: não mostra a escala
+  for (const q of QUALIDADES) {
+    const img = document.createElement("img");
+    img.src = `${PASTA_QUALIDADES}${q.k}_${q.k === atual.k ? "selected" : "unselected"}.png`;
+    img.alt = ""; // o contêiner (role="img") já descreve a qualidade
+    img.referrerPolicy = "no-referrer";
+    img.decoding = "async";
+    box.append(img);
+  }
+  box.setAttribute("aria-label", `Qualidade da ração: ${atual.l}`);
+  box.hidden = false;
+}
+
 function desenharRacao(id, d) {
   $("nomeRacao").textContent = String(d.descricao ?? "");
   $("codigoRacao").textContent = id;
   desenharFoto(id);
+  desenharQualidade(d.qualidade);
 
   const tbody = $("tabelaNiveis");
   tbody.replaceChildren();
@@ -295,7 +326,7 @@ $("formLogin").addEventListener("submit", async (e) => {
 $("btnSair").addEventListener("click", () => authMod && authMod.signOut(auth));
 
 /* ----- validação (usada no formulário e na importação) ----- */
-function montarRegistro(codigo, descricao, imagem, n, composicao) {
+function montarRegistro(codigo, descricao, imagem, n, composicao, qualidade) {
   const id = normalizarCodigo(codigo);
   if (!id) throw new Error("Código inválido (use somente números).");
   const nome = String(descricao ?? "").replace(/\s+/g, " ").trim();
@@ -306,6 +337,10 @@ function montarRegistro(codigo, descricao, imagem, n, composicao) {
   }
   const comp = String(composicao ?? "").replace(/\r\n?/g, "\n").trim();
   if (comp.length > 3000) throw new Error(`Composição longa demais no código ${id} (máximo 3000 caracteres).`);
+  const qual = String(qualidade ?? "").trim();
+  if (qual && !QUALIDADES.some((q) => q.k === qual)) {
+    throw new Error(`Qualidade inválida no código ${id} (use: ${QUALIDADES.map((q) => q.k).join(", ")}).`);
+  }
   const limpo = {};
   for (const c of CAMPOS) {
     const v = n ? n[c.k] : undefined;
@@ -314,7 +349,7 @@ function montarRegistro(codigo, descricao, imagem, n, composicao) {
     if (c.u === "%" && v > 100) throw new Error(`"${c.l}" não pode passar de 100% (código ${id}).`);
     if (v > 0) limpo[c.k] = v;
   }
-  return { id, dados: { codigo: id, descricao: nome, imagem: img, composicao: comp, n: limpo, atualizadoEm: serverTimestamp() } };
+  return { id, dados: { codigo: id, descricao: nome, imagem: img, composicao: comp, qualidade: qual, n: limpo, atualizadoEm: serverTimestamp() } };
 }
 
 function lerForm() {
@@ -326,7 +361,7 @@ function lerForm() {
     if (!Number.isFinite(num)) throw new Error(`Valor inválido em "${c.l}".`);
     n[c.k] = num;
   }
-  return montarRegistro($("fCodigo").value, $("fNome").value, "", n, $("fComposicao").value);
+  return montarRegistro($("fCodigo").value, $("fNome").value, "", n, $("fComposicao").value, $("fQualidade").value);
 }
 
 function mensagemErroFirebase(e) {
@@ -355,6 +390,7 @@ function preencherForm(id) {
   $("fCodigo").readOnly = true; // trocar o código = outra ração; para isso, cadastre uma nova
   $("fNome").value = d.descricao || "";
   $("fComposicao").value = d.composicao || "";
+  $("fQualidade").value = QUALIDADES.some((q) => q.k === d.qualidade) ? d.qualidade : "";
   const n = d.n || {};
   for (const c of CAMPOS) {
     const v = n[c.k];
@@ -460,7 +496,8 @@ $("btnImportar").addEventListener("click", async () => {
     registros = lista.map((r) => {
       const atual = cache.get(normalizarCodigo(r.codigo));
       const comp = r.composicao !== undefined ? r.composicao : (atual ? atual.composicao : "");
-      return montarRegistro(r.codigo, r.descricao, r.imagem, r.n, comp);
+      const qual = r.qualidade !== undefined ? r.qualidade : (atual ? atual.qualidade : "");
+      return montarRegistro(r.codigo, r.descricao, r.imagem, r.n, comp, qual);
     });
     const ids = new Set(registros.map((r) => r.id));
     if (ids.size !== registros.length) throw new Error("Há códigos repetidos no arquivo.");

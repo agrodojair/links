@@ -178,6 +178,22 @@
     .identificacao h2{ font-size: 1.8em; font-family: var(--font2); line-height: 1.15; margin-top: 2px; overflow-wrap: anywhere; }
     .identificacao .codigo{ margin-top: 8px; font-size: 13px; opacity: .75; }
 
+    /* Escala de qualidade (standard → super premium) */
+    .qualidade{
+      display: flex;
+      gap: 6px;
+      width: 95vw;
+      max-width: 420px;
+      margin-top: 22px;
+    }
+    .qualidade img{
+      flex: 1 1 0;
+      min-width: 0;
+      width: 25%;
+      height: auto;
+      display: block;
+    }
+
     .tabela-card{ margin-top: 40px; }   /* espaçamento entre o código e a tabela */
     table{ width: 100%; border-collapse: collapse; margin-top: 10px; }
     th{
@@ -236,7 +252,7 @@
     .admin h3{ font-size: 20px; font-family: var(--font2); }
     .admin section{ margin-top: 22px; padding-top: 18px; border-top: 2px dashed rgba(99,78,51,.5); }
     .admin label{ display: block; font-size: 13px; font-weight: bolder; margin-top: 10px; margin-bottom: 4px; }
-    .admin input[type=text], .admin input[type=email], .admin input[type=password], .admin textarea{ width: 100%; }
+    .admin input[type=text], .admin input[type=email], .admin input[type=password], .admin textarea, .admin select{ width: 100%; }
     .admin textarea{ min-height: 110px; resize: vertical; }
     .grade{ display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
     @media (max-width: 480px){ .grade{ grid-template-columns: 1fr; } }
@@ -283,6 +299,9 @@
         <h2 id="nomeRacao"></h2>
         <div class="codigo">Código: <span id="codigoRacao"></span></div>
       </div>
+
+      <!-- Escala de qualidade: só aparece se a ração tiver qualidade cadastrada -->
+      <div class="qualidade fade-item" id="escalaQualidade" style="--i: 2;" role="img" hidden></div>
 
       <div class="cartao tabela-card fade-item" style="--i: 2;">
         <h3>Níveis de garantia</h3>
@@ -345,6 +364,14 @@
             <input type="text" id="fCodigo" inputmode="numeric" maxlength="8" placeholder="Ex: 151 ou 0151" required>
             <label for="fNome">Nome da ração (descrição)</label>
             <input type="text" id="fNome" maxlength="120" placeholder="Ex: BILLY CAT CASTRADOS KG" required>
+            <label for="fQualidade">Qualidade da ração</label>
+            <select id="fQualidade">
+              <option value="">Sem qualidade (não mostra a escala)</option>
+              <option value="standard">Standard</option>
+              <option value="premium">Premium</option>
+              <option value="premium_especial">Premium Especial</option>
+              <option value="super_premium">Super Premium</option>
+            </select>
             <div class="grade" id="gradeNutrientes"></div>
             <label for="fComposicao">Composição (aparece abaixo da tabela; opcional)</label>
             <textarea id="fComposicao" maxlength="3000" placeholder="Ex: Milho, farelo de soja, farinha de carne e ossos..."></textarea>
