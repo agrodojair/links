@@ -34,11 +34,19 @@
       padding: 20px;
       min-height: 100vh;
       background-color: #292015;
-      background-image: url("images/bg_img.webp");
+    }
+    /* Fundo com blur: a imagem fica numa camada própria atrás do conteúdo.
+       Para mudar a intensidade, altere o valor de blur(...) */
+    body::before{
+      content: "";
+      position: fixed;
+      inset: -30px;                 /* sobra para as bordas não clarearem com o blur */
+      z-index: -1;
+      background-image: url("images/bg_img.png");
       background-repeat: no-repeat;
       background-position: top center;
       background-size: cover;
-      background-attachment: scroll;
+      filter: blur(6px);
     }
     body.modal-aberto{ overflow: hidden; }
 
