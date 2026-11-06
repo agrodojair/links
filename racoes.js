@@ -49,8 +49,8 @@ const CAMPOS = [
 ];
 
 // Escala de qualidade, da mais simples à melhor (ordem em que as imagens aparecem).
-// k = valor salvo no banco (também é o prefixo do arquivo: <k>_selected.png / <k>_unselected.png)
-// l = nome exibido (texto alternativo da imagem)
+// k = valor salvo no banco (não mude, senão as rações já cadastradas perdem a qualidade)
+// l = nome exibido na página
 const QUALIDADES = [
   { k: "standard",         l: "Standard" },
   { k: "premium",          l: "Premium" },
@@ -132,24 +132,27 @@ function semFoto(box) {
   box.append(s);
 }
 
-// Imagens da escala: images/qualidades/<qualidade>_selected.png (acesa) ou _unselected.png (apagada)
-const PASTA_QUALIDADES = "https://agrodojair.github.io/links/images/qualidades/";
-
+// Indicador de qualidade: 4 degraus, preenchidos até o nível da ração (sem imagens).
 function desenharQualidade(valor) {
-  const box = $("escalaQualidade");
-  box.replaceChildren();
-  const atual = QUALIDADES.find((q) => q.k === valor);
-  if (!atual) { box.hidden = true; return; } // sem qualidade cadastrada: não mostra a escala
-  for (const q of QUALIDADES) {
-    const img = document.createElement("img");
-    img.src = `${PASTA_QUALIDADES}${q.k}_${q.k === atual.k ? "selected" : "unselected"}.png`;
-    img.alt = ""; // o contêiner (role="img") já descreve a qualidade
-    img.referrerPolicy = "no-referrer";
-    img.decoding = "async";
-    box.append(img);
-  }
-  box.setAttribute("aria-label", `Qualidade da ração: ${atual.l}`);
-  box.hidden = false;
+  const cartao = $("cartaoQualidade");
+  const escala = $("qEscala");
+  escala.replaceChildren();
+  const nivel = QUALIDADES.findIndex((q) => q.k === valor);
+  if (nivel < 0) { cartao.hidden = true; return; } // sem qualidade cadastrada: não mostra nada
+  QUALIDADES.forEach((q, i) => {
+    const passo = document.createElement("div");
+    passo.className = "q-passo" + (i <= nivel ? " ativo" : "") + (i === nivel ? " atual" : "");
+    const barra = document.createElement("div");
+    barra.className = "q-barra";
+    const rot = document.createElement("div");
+    rot.className = "q-rotulo";
+    rot.textContent = q.l;
+    passo.append(barra, rot);
+    escala.append(passo);
+  });
+  $("qNome").textContent = QUALIDADES[nivel].l;
+  escala.setAttribute("aria-label", `Nível ${nivel + 1} de ${QUALIDADES.length}: ${QUALIDADES[nivel].l}`);
+  cartao.hidden = false;
 }
 
 function desenharRacao(id, d) {

@@ -178,21 +178,24 @@
     .identificacao h2{ font-size: 1.8em; font-family: var(--font2); line-height: 1.15; margin-top: 2px; overflow-wrap: anywhere; }
     .identificacao .codigo{ margin-top: 8px; font-size: 13px; opacity: .75; }
 
-    /* Escala de qualidade (standard → super premium) */
-    .qualidade{
-      display: flex;
+    /* Indicador de qualidade: 4 degraus preenchidos até o nível da ração */
+    .qualidade .q-nome{ font-size: 1.5em; font-family: var(--font2); margin-top: 4px; }
+    .q-escala{
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
       gap: 6px;
-      width: 95vw;
-      max-width: 420px;
-      margin-top: 22px;
+      margin-top: 14px;
     }
-    .qualidade img{
-      flex: 1 1 0;
-      min-width: 0;
-      width: 25%;
-      height: auto;
-      display: block;
+    .q-passo{ text-align: center; }
+    .q-barra{
+      height: 12px;
+      border-radius: 6px;
+      background: rgba(99, 78, 51, .25);
     }
+    .q-passo.ativo .q-barra{ background: var(--verde); }
+    .q-passo.atual .q-barra{ box-shadow: 0 0 0 2px var(--bege), 0 0 0 4px var(--verde); }
+    .q-rotulo{ font-size: 11px; line-height: 1.2; margin-top: 8px; opacity: .6; }
+    .q-passo.atual .q-rotulo{ opacity: 1; font-weight: bolder; font-family: var(--font2); }
 
     .tabela-card{ margin-top: 40px; }   /* espaçamento entre o código e a tabela */
     table{ width: 100%; border-collapse: collapse; margin-top: 10px; }
@@ -300,8 +303,13 @@
         <div class="codigo">Código: <span id="codigoRacao"></span></div>
       </div>
 
-      <!-- Escala de qualidade: só aparece se a ração tiver qualidade cadastrada -->
-      <div class="qualidade fade-item" id="escalaQualidade" style="--i: 2;" role="img" hidden></div>
+      <!-- Qualidade: só aparece se a ração tiver qualidade cadastrada -->
+      <div class="cartao qualidade fade-item" id="cartaoQualidade" style="--i: 2;" hidden>
+        <h3>Qualidade</h3>
+        <div class="q-nome" id="qNome"></div>
+        <div class="q-escala" id="qEscala" role="img"></div>
+      </div>
+
 
       <div class="cartao tabela-card fade-item" style="--i: 2;">
         <h3>Níveis de garantia</h3>
