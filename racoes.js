@@ -255,6 +255,7 @@ const leitor = $("leitor");
 const leitorVideo = $("leitorVideo");
 let leitorStream = null;
 let leitorAtivo = false;
+let leitorSessao = 0;   // identifica a leitura em andamento
 
 function msgLeitor(texto, erro = false) { mostrar($("msgLeitor"), texto, erro); }
 
@@ -264,7 +265,10 @@ function carregarJsQR() {
     const s = document.createElement("script");
     s.src = ARQUIVO_JSQR;
     s.onload = () => (window.jsQR ? resolve(window.jsQR) : reject(new Error("jsQR")));
-    s.onerror = () => reject(new Error("jsQR"));
+    s.onerror = () => {
+      console.error(`Leitor de QR: não encontrei "${ARQUIVO_JSQR}" ao lado do racoes.html (necessário no iPhone/Safari).`);
+      reject(new Error("jsQR"));
+    };
     document.head.append(s);
   });
 }
@@ -286,7 +290,7 @@ async function criarDecodificador() {
   return async () => {
     const w = leitorVideo.videoWidth, h = leitorVideo.videoHeight;
     if (!w || !h) return null;
-    const esc = Math.min(1, 640 / w);
+    const esc = Math.min(1, 800 / w);
     canvas.width = Math.round(w * esc);
     canvas.height = Math.round(h * esc);
     ctx.drawImage(leitorVideo, 0, 0, canvas.width, canvas.height);
@@ -307,6 +311,7 @@ function destinoSeguro(texto) {
 
 function pararLeitor() {
   leitorAtivo = false;
+  leitorSessao++; // invalida qualquer laço de leitura anterior
   if (leitorStream) leitorStream.getTracks().forEach((t) => t.stop());
   leitorStream = null;
   leitorVideo.srcObject = null;
@@ -318,30 +323,57 @@ function fecharLeitor() {
   document.body.classList.remove("modal-aberto");
 }
 
+// iOS (Safari/Chrome/Firefox no iPhone) exige: vídeo mudo + playsinline, e a câmera
+// pedida logo no toque do usuário (por isso getUserMedia vem antes de qualquer espera).
+function prepararVideoIOS() {
+  leitorVideo.muted = true;
+  leitorVideo.autoplay = true;
+  leitorVideo.playsInline = true;
+  leitorVideo.setAttribute("playsinline", "");
+  leitorVideo.setAttribute("webkit-playsinline", "");
+  leitorVideo.setAttribute("muted", "");
+}
+
 async function abrirLeitor() {
+  const sessao = ++leitorSessao;
   leitor.hidden = false;
   document.body.classList.add("modal-aberto");
   msgLeitor("Abrindo a câmera…");
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    msgLeitor("Este navegador não permite usar a câmera (é preciso abrir o site por https).", true);
+    msgLeitor("Este navegador não permite usar a câmera. Abra o site no Safari (por https) ou use a câmera do celular para ler o QR Code.", true);
     return;
   }
+  prepararVideoIOS();
   try {
-    const decodificar = await criarDecodificador();
-    leitorStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: "environment" } }, audio: false
+    // 1) câmera primeiro (precisa acontecer no gesto do toque, principalmente no iPhone)
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } },
+      audio: false
     });
-    if (leitor.hidden) { pararLeitor(); return; } // fechou enquanto pedia permissão
-    leitorVideo.srcObject = leitorStream;
+    if (sessao !== leitorSessao) { stream.getTracks().forEach((t) => t.stop()); return; } // fechou enquanto pedia permissão
+    leitorStream = stream;
+
+    // 2) leitor de QR (nativo ou jsQR)
+    const decodificar = await criarDecodificador();
+    if (sessao !== leitorSessao) return;
+
+    // 3) vídeo
+    leitorVideo.srcObject = stream;
+    if (leitorVideo.readyState < 1) {
+      await new Promise((ok) => leitorVideo.addEventListener("loadedmetadata", ok, { once: true }));
+    }
     await leitorVideo.play();
+    if (sessao !== leitorSessao) return;
     leitorAtivo = true;
     msgLeitor("Aponte a câmera para o QR Code.");
 
     let ultimoErro = "";
-    while (leitorAtivo) {
+    while (sessao === leitorSessao) {
       let texto = null;
-      try { texto = await decodificar(); } catch (_) { /* quadro ruim: tenta o próximo */ }
-      if (!leitorAtivo) return;
+      if (leitorVideo.readyState >= 2 && leitorVideo.videoWidth > 0) {
+        try { texto = await decodificar(); } catch (_) { /* quadro ruim: tenta o próximo */ }
+      }
+      if (sessao !== leitorSessao) return;
       if (texto) {
         const destino = destinoSeguro(texto);
         if (destino) {
@@ -355,15 +387,16 @@ async function abrirLeitor() {
           msgLeitor("Este QR Code não contém um link permitido.", true);
         }
       }
-      await new Promise((r) => setTimeout(r, 150));
+      await new Promise((r) => setTimeout(r, 120));
     }
   } catch (e) {
-    console.error(e);
+    console.error("Leitor de QR:", e);
+    if (sessao !== leitorSessao) return;
     pararLeitor();
-    if (e && e.name === "NotAllowedError") msgLeitor("Permissão da câmera negada. Libere o acesso nas configurações do navegador.", true);
-    else if (e && e.name === "NotFoundError") msgLeitor("Nenhuma câmera encontrada neste aparelho.", true);
-    else if (e && e.message === "jsQR") msgLeitor("Este navegador não lê QR Code automaticamente e a biblioteca de apoio (jsQR.js) não foi encontrada.", true);
-    else msgLeitor("Não foi possível iniciar a câmera.", true);
+    if (e && e.name === "NotAllowedError") msgLeitor("Permissão da câmera negada. No iPhone: Ajustes > Safari > Câmera > Perguntar/Permitir (ou toque em aA na barra do endereço > Ajustes do site).", true);
+    else if (e && (e.name === "NotFoundError" || e.name === "OverconstrainedError")) msgLeitor("Nenhuma câmera disponível neste aparelho.", true);
+    else if (e && e.message === "jsQR") msgLeitor("Leitor indisponível neste navegador. Use a câmera do celular para ler o QR Code.", true);
+    else msgLeitor("Não foi possível iniciar a câmera. Feche outros apps que usam a câmera e tente de novo.", true);
   }
 }
 
@@ -371,6 +404,11 @@ $("abrirLeitor").addEventListener("click", abrirLeitor);
 $("fecharLeitor").addEventListener("click", fecharLeitor);
 document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !leitor.hidden) fecharLeitor(); });
 window.addEventListener("pagehide", pararLeitor);
+// iOS congela a câmera quando o app vai para segundo plano: ao voltar, reinicia
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) { if (!leitor.hidden) pararLeitor(); }
+  else if (!leitor.hidden) abrirLeitor();
+});
 
 /* ------------------------- painel administrativo ------------------------- */
 
