@@ -32,8 +32,12 @@
 
     body{
       padding: 20px;
+      padding-left: max(20px, env(safe-area-inset-left));
+      padding-right: max(20px, env(safe-area-inset-right));
       min-height: 100vh;
-      background-color: #292015;
+      min-height: 100dvh;
+      background-image: url("images/bg_img.webp");
+      background-color: var(--texto);
     }
     /* Fundo com blur: a imagem fica numa camada própria atrás do conteúdo.
        Para mudar a intensidade, altere o valor de blur(...) */
