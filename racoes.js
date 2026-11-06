@@ -241,6 +241,137 @@ function lerUrl() {
 window.addEventListener("popstate", lerUrl);
 lerUrl();
 
+/* ------------------------- leitor de QR Code ------------------------- */
+
+// Domínios para onde o QR Code pode levar. Lista vazia = qualquer link https.
+// Ex.: ["agrodojair.github.io"] aceita só links desse site.
+const DOMINIOS_PERMITIDOS = [];
+
+// Plano B para navegadores sem leitura nativa (iPhone/Safari, Firefox):
+// coloque a biblioteca jsQR (jsQR.js) na mesma pasta desta página.
+const ARQUIVO_JSQR = "jsQR.js";
+
+const leitor = $("leitor");
+const leitorVideo = $("leitorVideo");
+let leitorStream = null;
+let leitorAtivo = false;
+
+function msgLeitor(texto, erro = false) { mostrar($("msgLeitor"), texto, erro); }
+
+function carregarJsQR() {
+  if (window.jsQR) return Promise.resolve(window.jsQR);
+  return new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = ARQUIVO_JSQR;
+    s.onload = () => (window.jsQR ? resolve(window.jsQR) : reject(new Error("jsQR")));
+    s.onerror = () => reject(new Error("jsQR"));
+    document.head.append(s);
+  });
+}
+
+// Devolve uma função que lê um quadro do vídeo e retorna o texto do QR (ou null)
+async function criarDecodificador() {
+  if ("BarcodeDetector" in window) {
+    try {
+      const det = new BarcodeDetector({ formats: ["qr_code"] });
+      return async () => {
+        const r = await det.detect(leitorVideo);
+        return r.length ? r[0].rawValue : null;
+      };
+    } catch (_) { /* cai no plano B */ }
+  }
+  const jsQR = await carregarJsQR();
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  return async () => {
+    const w = leitorVideo.videoWidth, h = leitorVideo.videoHeight;
+    if (!w || !h) return null;
+    const esc = Math.min(1, 640 / w);
+    canvas.width = Math.round(w * esc);
+    canvas.height = Math.round(h * esc);
+    ctx.drawImage(leitorVideo, 0, 0, canvas.width, canvas.height);
+    const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const r = jsQR(img.data, img.width, img.height, { inversionAttempts: "dontInvert" });
+    return r ? r.data : null;
+  };
+}
+
+// Só aceita links https (e, se configurado, dos domínios permitidos)
+function destinoSeguro(texto) {
+  let u;
+  try { u = new URL(String(texto).trim()); } catch (_) { return null; }
+  if (u.protocol !== "https:") return null;
+  if (DOMINIOS_PERMITIDOS.length && !DOMINIOS_PERMITIDOS.includes(u.hostname)) return null;
+  return u.href;
+}
+
+function pararLeitor() {
+  leitorAtivo = false;
+  if (leitorStream) leitorStream.getTracks().forEach((t) => t.stop());
+  leitorStream = null;
+  leitorVideo.srcObject = null;
+}
+
+function fecharLeitor() {
+  pararLeitor();
+  leitor.hidden = true;
+  document.body.classList.remove("modal-aberto");
+}
+
+async function abrirLeitor() {
+  leitor.hidden = false;
+  document.body.classList.add("modal-aberto");
+  msgLeitor("Abrindo a câmera…");
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    msgLeitor("Este navegador não permite usar a câmera (é preciso abrir o site por https).", true);
+    return;
+  }
+  try {
+    const decodificar = await criarDecodificador();
+    leitorStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: "environment" } }, audio: false
+    });
+    if (leitor.hidden) { pararLeitor(); return; } // fechou enquanto pedia permissão
+    leitorVideo.srcObject = leitorStream;
+    await leitorVideo.play();
+    leitorAtivo = true;
+    msgLeitor("Aponte a câmera para o QR Code.");
+
+    let ultimoErro = "";
+    while (leitorAtivo) {
+      let texto = null;
+      try { texto = await decodificar(); } catch (_) { /* quadro ruim: tenta o próximo */ }
+      if (!leitorAtivo) return;
+      if (texto) {
+        const destino = destinoSeguro(texto);
+        if (destino) {
+          msgLeitor("QR Code lido! Abrindo…");
+          pararLeitor();
+          location.assign(destino); // mesma aba
+          return;
+        }
+        if (texto !== ultimoErro) {
+          ultimoErro = texto;
+          msgLeitor("Este QR Code não contém um link permitido.", true);
+        }
+      }
+      await new Promise((r) => setTimeout(r, 150));
+    }
+  } catch (e) {
+    console.error(e);
+    pararLeitor();
+    if (e && e.name === "NotAllowedError") msgLeitor("Permissão da câmera negada. Libere o acesso nas configurações do navegador.", true);
+    else if (e && e.name === "NotFoundError") msgLeitor("Nenhuma câmera encontrada neste aparelho.", true);
+    else if (e && e.message === "jsQR") msgLeitor("Este navegador não lê QR Code automaticamente e a biblioteca de apoio (jsQR.js) não foi encontrada.", true);
+    else msgLeitor("Não foi possível iniciar a câmera.", true);
+  }
+}
+
+$("abrirLeitor").addEventListener("click", abrirLeitor);
+$("fecharLeitor").addEventListener("click", fecharLeitor);
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !leitor.hidden) fecharLeitor(); });
+window.addEventListener("pagehide", pararLeitor);
+
 /* ------------------------- painel administrativo ------------------------- */
 
 let authMod = null;
