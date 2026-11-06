@@ -133,7 +133,7 @@ function semFoto(box) {
 }
 
 // Imagens da escala: images/qualidades/<qualidade>_selected.png (acesa) ou _unselected.png (apagada)
-const PASTA_QUALIDADES = `${PASTA_IMAGENS}qualidades/`;
+const PASTA_QUALIDADES = "https://agrodojair.github.io/links/images/qualidades/";
 
 function desenharQualidade(valor) {
   const box = $("escalaQualidade");
