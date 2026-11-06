@@ -142,6 +142,7 @@ function desenharQualidade(valor) {
   QUALIDADES.forEach((q, i) => {
     const passo = document.createElement("div");
     passo.className = "q-passo" + (i <= nivel ? " ativo" : "") + (i === nivel ? " atual" : "");
+    passo.dataset.q = q.k; // cada degrau tem a cor da sua qualidade
     const barra = document.createElement("div");
     barra.className = "q-barra";
     const rot = document.createElement("div");
@@ -151,6 +152,7 @@ function desenharQualidade(valor) {
     escala.append(passo);
   });
   $("qNome").textContent = QUALIDADES[nivel].l;
+  cartao.dataset.q = QUALIDADES[nivel].k; // cor do cartão = cor da qualidade da ração
   escala.setAttribute("aria-label", `Nível ${nivel + 1} de ${QUALIDADES.length}: ${QUALIDADES[nivel].l}`);
   cartao.hidden = false;
 }

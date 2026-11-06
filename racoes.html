@@ -178,8 +178,22 @@
     .identificacao h2{ font-size: 1.8em; font-family: var(--font2); line-height: 1.15; margin-top: 2px; overflow-wrap: anywhere; }
     .identificacao .codigo{ margin-top: 8px; font-size: 13px; opacity: .75; }
 
-    /* Indicador de qualidade: 4 degraus preenchidos até o nível da ração */
-    .qualidade .q-nome{ font-size: 1.5em; font-family: var(--font2); margin-top: 4px; }
+    /* Indicador de qualidade: 4 degraus, cada qualidade com sua cor (--c = cor, --t = texto) */
+    [data-q="standard"]        { --c: #7a8793; --t: #5a6672; }
+    [data-q="premium"]         { --c: #2e7d32; --t: #25692a; }
+    [data-q="premium_especial"]{ --c: #1e63b5; --t: #164f95; }
+    [data-q="super_premium"]   { --c: #d4a017; --t: #8a5d00; }
+
+    .qualidade{
+      border-color: var(--c);
+      box-shadow: 3px 3px 0 var(--c);
+    }
+    .qualidade .q-nome{
+      font-size: 1.7em;
+      font-family: var(--font2);
+      margin-top: 4px;
+      color: var(--t);
+    }
     .q-escala{
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -188,14 +202,17 @@
     }
     .q-passo{ text-align: center; }
     .q-barra{
-      height: 12px;
-      border-radius: 6px;
-      background: rgba(99, 78, 51, .25);
+      height: 14px;
+      border-radius: 7px;
+      background: rgba(99, 78, 51, .2);
     }
-    .q-passo.ativo .q-barra{ background: var(--verde); }
-    .q-passo.atual .q-barra{ box-shadow: 0 0 0 2px var(--bege), 0 0 0 4px var(--verde); }
-    .q-rotulo{ font-size: 11px; line-height: 1.2; margin-top: 8px; opacity: .6; }
-    .q-passo.atual .q-rotulo{ opacity: 1; font-weight: bolder; font-family: var(--font2); }
+    .q-passo.ativo .q-barra{ background: var(--c); }
+    .q-passo[data-q="super_premium"].ativo .q-barra{
+      background: linear-gradient(90deg, #c28a00, #f5d060, #c28a00);
+    }
+    .q-passo.atual .q-barra{ box-shadow: 0 0 0 2px var(--bege), 0 0 0 4px var(--c); }
+    .q-rotulo{ font-size: 11px; line-height: 1.2; margin-top: 8px; opacity: .55; }
+    .q-passo.atual .q-rotulo{ opacity: 1; font-weight: bolder; font-family: var(--font2); color: var(--t); }
 
     .tabela-card{ margin-top: 40px; }   /* espaçamento entre o código e a tabela */
     table{ width: 100%; border-collapse: collapse; margin-top: 10px; }
