@@ -152,6 +152,35 @@
     }
     .estado.erro{ background: #b3261e; }
 
+    /* Resultados da busca por nome */
+    .resultados-busca{ width: 95vw; max-width: 420px; margin-top: 18px; }
+    .busca-info{
+      color: #fff; text-shadow: 0 0 5px black;
+      font-size: 14px; line-height: 1.4; margin-bottom: 10px; text-align: center;
+    }
+    .item-busca{
+      display: block;
+      background-color: var(--bege);
+      border: 2px solid var(--marrom);
+      border-radius: 16px;
+      box-shadow: 3px 3px 0 var(--marrom);
+      color: var(--texto);
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      transition: scale .15s;
+    }
+    .item-busca:hover, .item-busca:focus-visible{ scale: 1.015; outline: none; }
+    .ib-nome{ font-family: var(--font2); font-size: 17px; line-height: 1.25; overflow-wrap: anywhere; }
+    .ib-meta{ display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; font-size: 13px; opacity: .85; }
+    .ib-niveis{ margin-top: 6px; font-size: 13px; }
+    .chip-q{
+      background: var(--c); color: #fff;
+      font-size: 11px; font-weight: bolder;
+      padding: 2px 9px; border-radius: 999px;
+    }
+    .chip-q[data-q="super_premium"]{ color: #3b2a00; }
+    .mais-busca{ width: 100%; margin-bottom: 12px; }
+
     /* Resultado */
     .resultado{ display: flex; flex-direction: column; align-items: center; width: 100%; }
 
@@ -345,16 +374,23 @@
 
     <!-- Pesquisa por código -->
     <form class="cartao fade-item" id="formBusca" style="--i: 1;" autocomplete="off">
-      <label class="legenda" for="campoCodigo">Buscar ração pelo código</label>
+      <label class="legenda" for="campoCodigo">Buscar ração pelo código ou nome</label>
       <div class="busca">
-        <input type="text" id="campoCodigo" inputmode="numeric" maxlength="8" placeholder="Ex: 0151" aria-describedby="dicaBusca">
+        <input type="text" id="campoCodigo" inputmode="text" maxlength="80" placeholder="Ex: 0151 ou gatos castrados salmão" aria-describedby="dicaBusca" enterkeyhint="search">
         <button type="submit">Buscar</button>
       </div>
-      <p class="dica" id="dicaBusca">O código está na etiqueta da prateleira.</p>
+      <p class="dica" id="dicaBusca">O código está na etiqueta da prateleira. Também dá para buscar por nome, espécie, qualidade ou nível (ex.: “qua cast salm”, “cães proteína acima de 28”).</p>
       <button type="button" class="sec qr-btn" id="abrirLeitor">📷 Ler QR Code</button>
     </form>
 
     <div class="estado" id="estado" role="status" aria-live="polite" hidden></div>
+
+    <!-- Resultados da busca por nome -->
+    <div class="resultados-busca" id="resultadosBusca" hidden>
+      <p class="busca-info" id="buscaInfo" role="status" aria-live="polite"></p>
+      <div id="listaBusca"></div>
+      <button type="button" class="sec mais-busca" id="maisBusca" hidden>Mostrar mais</button>
+    </div>
 
     <!-- Resultado -->
     <div class="resultado" id="resultado" hidden>
@@ -479,6 +515,11 @@
           <div class="linha-botoes" style="margin-top: 8px;">
             <button type="button" class="sec" id="btnRecarregarLista">Recarregar tudo do servidor</button>
           </div>
+          <div class="linha-botoes" style="margin-top: 8px;">
+            <button type="button" id="btnIndice">Atualizar índice de busca</button>
+          </div>
+          <p class="dica">O índice é atualizado sozinho ao salvar, excluir ou importar. Use o botão após o primeiro uso ou se a busca por nome ficar desatualizada.</p>
+          <div class="msg" id="msgIndice" hidden></div>
           <label for="filtroLista">Filtrar por código ou nome</label>
           <input type="text" id="filtroLista" placeholder="Digite para filtrar…">
           <ul class="lista" id="lista"></ul>

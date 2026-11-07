@@ -229,6 +229,7 @@ async function carregar(cod) {
   const minha = ++seq;
   const id = normalizarCodigo(cod);
   resultado.hidden = true;
+  esconderCards();
   if (!id) {
     mostrar(estado, "Digite um código válido (somente números).", true);
     return;
@@ -257,26 +258,423 @@ async function carregar(cod) {
   }
 }
 
+/* @@BUSCA-INI  (motor de busca: sem acesso ao DOM, testável isoladamente) */
+
+// Normalização: minúsculas, sem acento, números e letras separados ("omega3" -> "omega 3"),
+// decimais preservados ("28,5" -> "28_5").
+function semAcento(s) {
+  return String(s ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+function tokenizar(s) {
+  return semAcento(s)
+    .replace(/(\d)[.,](\d)/g, "$1_$2")
+    .replace(/([a-z])(\d)/g, "$1 $2")
+    .replace(/(\d)([a-z])/g, "$1 $2")
+    .replace(/[^a-z0-9_]+/g, " ")
+    .trim().split(" ").filter(Boolean);
+}
+const ehNumero = (t) => /^\d+(_\d+)?$/.test(t);
+const valorNumero = (t) => parseFloat(t.replace("_", "."));
+
+// Aproximação fonética para erros de escrita comuns em português (nos dois lados da comparação)
+function fonetica(t) {
+  if (/\d/.test(t)) return t;
+  return t.replace(/ph/g, "f").replace(/ck/g, "c").replace(/h/g, "").replace(/y/g, "i")
+          .replace(/w/g, "v").replace(/z/g, "s").replace(/(.)\1+/g, "$1");
+}
+
+// Distância de edição (inclui troca de letras vizinhas), com parada antecipada
+function distancia(a, b, max) {
+  if (Math.abs(a.length - b.length) > max) return max + 1;
+  const m = a.length, n = b.length;
+  let ant2 = null, ant = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) {
+    const cur = [i];
+    let minLinha = i;
+    for (let j = 1; j <= n; j++) {
+      const custo = a[i - 1] === b[j - 1] ? 0 : 1;
+      let v = Math.min(ant[j] + 1, cur[j - 1] + 1, ant[j - 1] + custo);
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) v = Math.min(v, ant2[j - 2] + 1);
+      cur[j] = v;
+      if (v < minLinha) minLinha = v;
+    }
+    if (minLinha > max) return max + 1;
+    ant2 = ant; ant = cur;
+  }
+  return ant[n];
+}
+
+// Quão bem o termo digitado (q) combina com uma palavra do índice (0 a 1)
+function pontoToken(q, fq, tk) {
+  const t = tk.t;
+  if (q === t) return 1;
+  if (q.length < 2 || t.length < 2 || ehNumero(q)) return 0;
+  if (t.startsWith(q)) return 0.9;                       // "cast" -> "castrados"
+  if (q.length >= 4 && t.includes(q)) return 0.7;
+  if (fq === tk.f) return 0.85;                          // "salmau", "castrados" com h/z/y trocados
+  if (fq.length >= 3 && tk.f.startsWith(fq)) return 0.8;
+  if (q.length >= 4) {
+    const max = q.length >= 6 ? 2 : 1;                   // erro de digitação
+    const d = distancia(q, t, max);
+    if (d <= max) return d === 1 ? 0.75 : 0.65;
+    if (q.length >= 5 && t.length > q.length && distancia(q, t.slice(0, q.length), 1) <= 1) return 0.72; // palavra incompleta com erro
+  }
+  return 0;
+}
+
+/* ----- significado dos campos ----- */
+const ESPECIE_SIN = {
+  caes:  ["cao", "caes", "cachorro", "cachorros", "dog", "canino", "caninos"],
+  gatos: ["gato", "gatos", "felino", "felinos", "cat"]
+};
+const QUALIDADE_SIN = {
+  standard:         ["standard", "padrao", "economica", "simples", "basica"],
+  premium:          ["premium"],
+  premium_especial: ["premium", "especial"],
+  super_premium:    ["super", "premium", "melhor", "top"]
+};
+const NUTRIENTE_ALIAS = {
+  proteina_bruta: ["proteina", "proteinas", "pb"],
+  extrato_etereo: ["gordura", "gorduras", "lipidio", "lipidios", "etereo"],
+  materia_mineral: ["mineral", "minerais", "cinza", "cinzas"],
+  materia_fibrosa: ["fibra", "fibras", "fibrosa"],
+  umidade: ["umidade"],
+  calcio: ["calcio"], fosforo: ["fosforo"], sodio: ["sodio"], potassio: ["potassio"],
+  extrato_yucca: ["yucca", "yuca"],
+  bcaa: ["bcaa"], l_carnitina: ["carnitina"],
+  sulfato_condroitina: ["condroitina"], sulfato_glicosamina: ["glicosamina"],
+  energia_metabolizavel: ["energia", "caloria", "calorias", "kcal", "calorica", "calorico", "energetica", "energetico"]
+};
+const ALIAS = {};
+for (const [k, lista] of Object.entries(NUTRIENTE_ALIAS)) for (const a of lista) ALIAS[a] = k;
+
+// Palavras que representam uma necessidade (não um nutriente citado diretamente)
+const NECESSIDADE = {
+  light:        { k: "extrato_etereo", dir: "asc" },
+  odor:         { k: "extrato_yucca" },
+  cheiro:       { k: "extrato_yucca" },
+  articulacao:  { qualquer: ["sulfato_condroitina", "sulfato_glicosamina"] },
+  articulacoes: { qualquer: ["sulfato_condroitina", "sulfato_glicosamina"] },
+  artrose:      { qualquer: ["sulfato_condroitina", "sulfato_glicosamina"] },
+  pelagem:      { qualquer: ["omega6", "omega3"] },
+  pelo:         { qualquer: ["omega6", "omega3"] },
+  pele:         { qualquer: ["omega6", "omega3"] },
+  omega:        { qualquer: ["omega6", "omega3"] }
+};
+const MAIS = new Set(["alta", "alto", "altos", "altas", "rica", "rico", "maior", "maiores", "mais", "muita", "muito", "acima", "minimo", "min", "superior"]);
+const MENOS = new Set(["baixa", "baixo", "baixos", "baixas", "pouca", "pouco", "menor", "menores", "menos", "abaixo", "maximo", "max", "ate", "inferior"]);
+const PALAVRAS_VAZIAS = new Set(["de", "da", "do", "das", "dos", "com", "para", "e", "a", "o", "as", "os", "que", "em", "um", "uma",
+  "teor", "nivel", "niveis", "garantia", "racao", "racoes", "qual", "quais", "tem", "tenha", "extrato", "materia"]);
+
+// Separa o que é nutriente/necessidade (filtro e ordem) do que é texto (nome, composição, espécie, qualidade)
+function interpretar(tokens) {
+  const nut = new Array(tokens.length).fill(false);
+  const consumido = new Array(tokens.length).fill(false);
+  const intencoes = []; // { pos, k?, qualquer?, dir? }
+  tokens.forEach((t, i) => {
+    if (t === "omega" && (tokens[i + 1] === "3" || tokens[i + 1] === "6")) {
+      intencoes.push({ pos: i, k: "omega" + tokens[i + 1] });
+      nut[i] = nut[i + 1] = consumido[i] = consumido[i + 1] = true;
+    } else if (ALIAS[t]) {
+      intencoes.push({ pos: i, k: ALIAS[t] });
+      nut[i] = consumido[i] = true;
+    } else if (NECESSIDADE[t] && !nut[i]) {
+      intencoes.push({ pos: i, ...NECESSIDADE[t] });
+      nut[i] = consumido[i] = true;
+    }
+  });
+
+  const filtros = [], exige = [], qualquer = [];
+  let ordem = null;
+  for (const it of intencoes) {
+    if (it.qualquer) { qualquer.push(it.qualquer); if (!ordem) ordem = { k: it.qualquer[0], dir: "desc", implicito: true }; continue; }
+    let num = null, numIdx = -1, cmp = null, cmpIdx = -1;
+    for (let d = 1; d <= 4; d++) {
+      for (const i of [it.pos + d, it.pos - d]) {
+        if (i < 0 || i >= tokens.length || nut[i]) continue;
+        if (num === null && ehNumero(tokens[i])) { num = valorNumero(tokens[i]); numIdx = i; }
+        if (cmp === null && (MAIS.has(tokens[i]) || MENOS.has(tokens[i]))) { cmp = MENOS.has(tokens[i]) ? "menos" : "mais"; cmpIdx = i; }
+      }
+    }
+    if (num !== null) {
+      // "proteina 30": número colado no nutriente. Pesos ("10 kg") não contam.
+      const colado = Math.abs(numIdx - it.pos) === 1 && !["kg", "g"].includes(tokens[numIdx + 1]);
+      if (cmp === null && !colado) { num = null; numIdx = -1; }
+    }
+    exige.push(it.k);
+    if (num !== null) {
+      filtros.push({ k: it.k, op: cmp === "menos" ? "<=" : ">=", val: num });
+      consumido[numIdx] = true;
+      if (cmpIdx >= 0) consumido[cmpIdx] = true;
+    } else {
+      const dir = it.dir || (cmp === "menos" ? "asc" : "desc");
+      if (cmpIdx >= 0) consumido[cmpIdx] = true;
+      if (!ordem || (ordem.implicito && (cmp !== null || it.dir))) ordem = { k: it.k, dir, implicito: cmp === null && !it.dir };
+    }
+  }
+  const texto = tokens.filter((t, i) => !consumido[i] && !PALAVRAS_VAZIAS.has(t));
+  const palavras = intencoes.map((x) => tokens[x.pos]);
+  return { texto, filtros, exige, qualquer, ordem, palavras, ha: intencoes.length > 0 };
+}
+
+const LIMIAR = 0.45;
+
+function passaFiltros(r, it) {
+  const n = r.n || {};
+  const tem = (k) => typeof n[k] === "number" && n[k] > 0;
+  for (const k of it.exige) if (!tem(k)) return false;
+  for (const grupo of it.qualquer) if (!grupo.some(tem)) return false;
+  for (const f of it.filtros) {
+    if (!tem(f.k)) return false;
+    if (f.op === ">=" ? n[f.k] < f.val : n[f.k] > f.val) return false;
+  }
+  return true;
+}
+
+// Prepara as palavras pesquisáveis de cada ração (nome, espécie, qualidade e composição, com pesos)
+function prepararIndice(lista) {
+  return lista.map((r) => {
+    const mapa = new Map();
+    const add = (texto, peso) => {
+      for (const t of tokenizar(texto)) {
+        const atual = mapa.get(t);
+        if (!atual || atual.w < peso) mapa.set(t, { t, f: fonetica(t), w: peso });
+      }
+    };
+    add(r.d, 1);
+    if (ESPECIE_SIN[r.e]) add(ESPECIE_SIN[r.e].join(" "), 0.9);
+    if (QUALIDADE_SIN[r.q]) add(QUALIDADE_SIN[r.q].join(" "), 0.9);
+    add(r.k, 0.6);
+    return { ...r, campos: [...mapa.values()], nomeTokens: tokenizar(r.d) };
+  });
+}
+
+// Retorna { itens, interpretacao, aproximado }
+function buscarRacoes(consulta, lista) {
+  const it = interpretar(tokenizar(consulta));
+  const termos = it.texto.map((t) => ({ t, f: fonetica(t) }));
+  const rodar = (minimo) => {
+    const achados = [];
+    for (const r of lista) {
+      if (!passaFiltros(r, it)) continue;
+      let soma = 0, casou = 0;
+      for (const q of termos) {
+        let melhor = 0;
+        for (const c of r.campos) {
+          const p = pontoToken(q.t, q.f, c) * c.w;
+          if (p > melhor) melhor = p;
+        }
+        if (melhor >= LIMIAR) { casou++; soma += melhor; }
+      }
+      if (termos.length && casou < minimo(termos.length)) continue;
+      let score = termos.length ? soma / termos.length : 0;
+      // pequeno bônus quando o 1º termo abre o nome da ração
+      if (termos.length && r.nomeTokens[0] && pontoToken(termos[0].t, termos[0].f, { t: r.nomeTokens[0], f: fonetica(r.nomeTokens[0]) }) >= 0.85) score += 0.05;
+      // a palavra da necessidade (ex.: "light") aparecendo no próprio nome da ração vem primeiro
+      const noNome = it.palavras.some((p) => r.nomeTokens.some((nt) => pontoToken(p, fonetica(p), { t: nt, f: fonetica(nt) }) >= 0.85));
+      achados.push({ r, score, noNome });
+    }
+    return achados;
+  };
+  let achados = rodar((n) => n);
+  let aproximado = false;
+  if (!achados.length && termos.length >= 2) {
+    achados = rodar((n) => Math.max(1, Math.ceil(n / 2)));
+    aproximado = achados.length > 0;
+  }
+  const valor = (r) => (r.n && r.n[it.ordem.k]) || 0;
+  achados.sort((a, b) => {
+    if (a.noNome !== b.noNome) return a.noNome ? -1 : 1;
+    if (it.ordem && !(it.ordem.implicito && termos.length)) {
+      const d = it.ordem.dir === "asc" ? valor(a.r) - valor(b.r) : valor(b.r) - valor(a.r);
+      if (d) return d;
+    }
+    return (b.score - a.score) || a.r.d.localeCompare(b.r.d, "pt-BR");
+  });
+  return { itens: achados.map((x) => x.r), it, aproximado };
+}
+/* @@BUSCA-FIM */
+
+/* ----- busca por nome (usa um índice único guardado no Firestore: 1 leitura, ou 0 se estiver em cache local) ----- */
+const INDICE_LOCAL = "racoes_indice_v1";
+const INDICE_MIN = 30;      // minutos que o índice fica guardado no aparelho
+const CARDS_POR_VEZ = 20;
+let indicePronto = null;
+
+async function obterIndice() {
+  if (indicePronto) return indicePronto;
+  let bruto = null;
+  try {
+    const o = JSON.parse(localStorage.getItem(INDICE_LOCAL) || "null");
+    if (o && typeof o.dados === "string" && Date.now() - o.t <= INDICE_MIN * 60 * 1000) bruto = o.dados;
+  } catch (_) { /* sem cache */ }
+  if (!bruto) {
+    const snap = await getDoc(doc(db, "busca", "indice"));
+    if (!snap.exists()) throw new Error("sem-indice");
+    bruto = snap.data().dados;
+    try { localStorage.setItem(INDICE_LOCAL, JSON.stringify({ t: Date.now(), dados: bruto })); } catch (_) {}
+  }
+  const lista = JSON.parse(bruto);
+  if (!Array.isArray(lista)) throw new Error("indice-invalido");
+  indicePronto = prepararIndice(lista.filter((r) => r && typeof r.c === "string" && typeof r.d === "string"));
+  return indicePronto;
+}
+
+function esconderCards() { $("resultadosBusca").hidden = true; }
+
+function descreverFiltros(it) {
+  const partes = [];
+  const rotulo = (k) => (CAMPOS.find((c) => c.k === k) || {}).l || k;
+  for (const f of it.filtros) {
+    const c = CAMPOS.find((x) => x.k === f.k);
+    partes.push(`${rotulo(f.k)} ${f.op === ">=" ? "a partir de" : "até"} ${c ? formatar(c, f.val) : f.val}`);
+  }
+  for (const k of it.exige) if (!it.filtros.some((f) => f.k === k)) partes.push(`com ${rotulo(k)}`);
+  if (it.ordem && !it.filtros.some((f) => f.k === it.ordem.k)) {
+    partes.push(`${it.ordem.dir === "asc" ? "menor" : "maior"} ${rotulo(it.ordem.k)} primeiro`);
+  }
+  return partes;
+}
+
+function criarCard(r, it) {
+  const a = document.createElement("a");
+  a.className = "item-busca";
+  a.href = `?cod=${r.c}`;
+  a.addEventListener("click", (e) => {
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return; // deixa abrir em nova aba
+    e.preventDefault();
+    history.pushState(null, "", `?cod=${r.c}`);
+    $("campoCodigo").value = r.c;
+    carregar(r.c);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  const nome = document.createElement("div");
+  nome.className = "ib-nome";
+  nome.textContent = r.d;
+
+  const meta = document.createElement("div");
+  meta.className = "ib-meta";
+  const cod = document.createElement("span");
+  cod.textContent = `Código ${r.c}`;
+  meta.append(cod);
+  const qual = QUALIDADES.find((q) => q.k === r.q);
+  if (qual) {
+    const chip = document.createElement("span");
+    chip.className = "chip-q";
+    chip.dataset.q = qual.k;
+    chip.textContent = qual.l;
+    meta.append(chip);
+  }
+
+  // Destaca os níveis que a pessoa pediu; sem pedido, proteína e gordura
+  const chaves = [...it.exige, ...it.qualquer.flat()];
+  const mostrarK = [...new Set(chaves.length ? chaves : ["proteina_bruta", "extrato_etereo"])];
+  const partes = [];
+  for (const k of mostrarK.slice(0, 3)) {
+    const c = CAMPOS.find((x) => x.k === k);
+    const v = r.n && r.n[k];
+    if (c && valorVisivel(v)) partes.push(`${c.l}: ${formatar(c, v)}`);
+  }
+  a.append(nome, meta);
+  if (partes.length) {
+    const res = document.createElement("div");
+    res.className = "ib-niveis";
+    res.textContent = partes.join(" · ");
+    a.append(res);
+  }
+  return a;
+}
+
+function mostrarCards(achados, it, texto, aproximado) {
+  const box = $("resultadosBusca");
+  const lista = $("listaBusca");
+  const mais = $("maisBusca");
+  lista.replaceChildren();
+  let exibidos = 0;
+  const ver = () => {
+    for (const r of achados.slice(exibidos, exibidos + CARDS_POR_VEZ)) lista.append(criarCard(r, it));
+    exibidos = Math.min(achados.length, exibidos + CARDS_POR_VEZ);
+    mais.hidden = exibidos >= achados.length;
+    mais.textContent = `Mostrar mais (${achados.length - exibidos})`;
+  };
+  mais.onclick = ver;
+  const n = achados.length;
+  let info = aproximado
+    ? `Nenhum resultado exato. ${n} aproximado${n > 1 ? "s" : ""} para “${texto}”.`
+    : `${n} ${n > 1 ? "rações" : "ração"} para “${texto}”.`;
+  const filtros = descreverFiltros(it);
+  if (filtros.length) info += ` Considerando: ${filtros.join("; ")}.`;
+  $("buscaInfo").textContent = info;
+  ver();
+  box.hidden = false;
+}
+
+async function buscarTexto(texto) {
+  const minha = ++seq;
+  resultado.hidden = true;
+  esconderCards();
+  const consulta = String(texto ?? "").trim().slice(0, 80);
+  if (!tokenizar(consulta).length) {
+    mostrar(estado, "Digite o código ou parte do nome da ração.", true);
+    return;
+  }
+  mostrar(estado, "Buscando…");
+  let lista;
+  try {
+    lista = await obterIndice();
+  } catch (e) {
+    if (minha !== seq) return;
+    console.error(e);
+    mostrar(estado, e.message === "sem-indice"
+      ? "A busca por nome ainda não está disponível. Use o código da ração."
+      : "Não foi possível carregar a busca agora. Tente novamente em instantes.", true);
+    return;
+  }
+  if (minha !== seq) return;
+  const { itens, it, aproximado } = buscarRacoes(consulta, lista);
+  if (!itens.length) {
+    mostrar(estado, `Nenhuma ração encontrada para “${consulta}”.`, true);
+    return;
+  }
+  mostrar(estado, "");
+  mostrarCards(itens, it, consulta, aproximado);
+}
+
 $("formBusca").addEventListener("submit", (e) => {
   e.preventDefault();
-  const id = normalizarCodigo($("campoCodigo").value);
-  if (id) {
-    $("campoCodigo").value = id;
-    history.pushState(null, "", `?cod=${id}`);
+  const texto = $("campoCodigo").value.trim();
+  if (/^\d+$/.test(texto)) {            // só números: código exato
+    const id = normalizarCodigo(texto);
+    if (id) {
+      $("campoCodigo").value = id;
+      history.pushState(null, "", `?cod=${id}`);
+    }
+    carregar($("campoCodigo").value);
+    return;
   }
-  carregar($("campoCodigo").value);
+  if (tokenizar(texto).length) {         // texto: busca por nome
+    history.pushState(null, "", `?q=${encodeURIComponent(texto.slice(0, 80))}`);
+  }
+  buscarTexto(texto);
 });
 
 function lerUrl() {
-  const cod = new URLSearchParams(location.search).get("cod");
-  if (cod === null) {
+  const p = new URLSearchParams(location.search);
+  const cod = p.get("cod");
+  const q = p.get("q");
+  if (cod !== null) {
+    $("campoCodigo").value = cod;
+    carregar(cod);
+  } else if (q !== null) {
+    $("campoCodigo").value = q.slice(0, 80);
+    buscarTexto(q);
+  } else {
     seq++;
     resultado.hidden = true;
+    esconderCards();
     mostrar(estado, "");
-    return;
   }
-  $("campoCodigo").value = cod;
-  carregar(cod);
 }
 window.addEventListener("popstate", lerUrl);
 lerUrl();
@@ -636,9 +1034,65 @@ $("formRacao").addEventListener("submit", async (e) => {
     desenharLista();
     limparForm();
     mostrar($("msgForm"), `Ração ${reg.id} salva com sucesso.`);
+    try {
+      await atualizarIndiceBusca(); // mantém a busca por nome em dia
+    } catch (e) {
+      console.error(e);
+      mostrar($("msgForm"), `Ração ${reg.id} salva, mas o índice de busca não foi atualizado: ${erroTexto(e)}`, true);
+    }
   } catch (err) {
     console.error(err);
     mostrar($("msgForm"), mensagemErroFirebase(err), true);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+
+/* ----- índice de busca (um único documento "busca/indice", lido pelos visitantes) ----- */
+function montarIndiceBusca(limiteComposicao) {
+  const itens = [...cache.entries()].map(([id, d]) => {
+    const r = { c: id, d: String(d.descricao || "") };
+    if (QUALIDADES.some((q) => q.k === d.qualidade)) r.q = d.qualidade;
+    if (especieValida(d.especie)) r.e = d.especie;
+    const n = {};
+    for (const c of CAMPOS) if (d.n && valorVisivel(d.n[c.k])) n[c.k] = d.n[c.k];
+    if (Object.keys(n).length) r.n = n;
+    const k = String(d.composicao || "").replace(/\s+/g, " ").trim().slice(0, limiteComposicao);
+    if (k) r.k = k;
+    return r;
+  }).sort((a, b) => a.c.localeCompare(b.c));
+  return JSON.stringify(itens);
+}
+
+async function atualizarIndiceBusca() {
+  if (!cache.size) throw new Error("A lista de rações está vazia. Use \"Recarregar tudo do servidor\" e tente de novo.");
+  let dados = "";
+  for (const lim of [400, 100, 0]) { // se passar de ~900 KB (limite do Firestore é 1 MB), encurta a composição
+    dados = montarIndiceBusca(lim);
+    if (new TextEncoder().encode(dados).length <= 900000) break;
+    if (lim === 0) throw new Error("Rações demais para o índice de busca caber em um documento.");
+  }
+  await setDoc(doc(db, "busca", "indice"), { v: 1, total: cache.size, dados, atualizadoEm: serverTimestamp() });
+  try { localStorage.removeItem(INDICE_LOCAL); } catch (_) {}
+  indicePronto = null;
+  return cache.size;
+}
+
+function erroTexto(e) {
+  return e && e.code ? mensagemErroFirebase(e) : (e && e.message) || "Erro desconhecido.";
+}
+
+$("btnIndice").addEventListener("click", async () => {
+  const btn = $("btnIndice");
+  btn.disabled = true;
+  mostrar($("msgIndice"), "Atualizando o índice de busca…");
+  try {
+    const total = await atualizarIndiceBusca();
+    mostrar($("msgIndice"), `Índice de busca atualizado com ${total} rações.`);
+  } catch (e) {
+    console.error(e);
+    mostrar($("msgIndice"), erroTexto(e), true);
   } finally {
     btn.disabled = false;
   }
@@ -768,6 +1222,12 @@ async function excluir(id) {
     if (editando === id) limparForm();
     desenharLista();
     mostrar($("msgForm"), `Ração ${id} excluída.`);
+    try {
+      await atualizarIndiceBusca();
+    } catch (e2) {
+      console.error(e2);
+      mostrar($("msgForm"), `Ração ${id} excluída, mas o índice de busca não foi atualizado: ${erroTexto(e2)}`, true);
+    }
   } catch (e) {
     console.error(e);
     mostrar($("msgForm"), mensagemErroFirebase(e), true);
@@ -814,6 +1274,13 @@ $("btnImportar").addEventListener("click", async () => {
     mostrar(msg, `${registros.length} rações importadas com sucesso.`);
     $("arquivoImport").value = "";
     await carregarLista();
+    try {
+      await atualizarIndiceBusca();
+      mostrar(msg, `${registros.length} rações importadas e índice de busca atualizado.`);
+    } catch (e2) {
+      console.error(e2);
+      mostrar(msg, `${registros.length} rações importadas, mas o índice de busca não foi atualizado: ${erroTexto(e2)}`, true);
+    }
   } catch (e) {
     console.error(e);
     mostrar(msg, mensagemErroFirebase(e), true);
