@@ -58,6 +58,10 @@ const QUALIDADES = [
   { k: "super_premium",    l: "Super Premium" }
 ];
 
+// Espécie (campo de uso interno: não é exibido na página pública)
+const ESPECIES = { caes: "Cães", gatos: "Gatos" };
+const especieValida = (v) => typeof v === "string" && Object.prototype.hasOwnProperty.call(ESPECIES, v);
+
 const $ = (id) => document.getElementById(id);
 const nf = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 4 });
 
@@ -500,7 +504,7 @@ $("formLogin").addEventListener("submit", async (e) => {
 $("btnSair").addEventListener("click", () => authMod && authMod.signOut(auth));
 
 /* ----- validação (usada no formulário e na importação) ----- */
-function montarRegistro(codigo, descricao, imagem, n, composicao, qualidade) {
+function montarRegistro(codigo, descricao, imagem, n, composicao, qualidade, especie) {
   const id = normalizarCodigo(codigo);
   if (!id) throw new Error("Código inválido (use somente números).");
   const nome = String(descricao ?? "").replace(/\s+/g, " ").trim();
@@ -515,6 +519,10 @@ function montarRegistro(codigo, descricao, imagem, n, composicao, qualidade) {
   if (qual && !QUALIDADES.some((q) => q.k === qual)) {
     throw new Error(`Qualidade inválida no código ${id} (use: ${QUALIDADES.map((q) => q.k).join(", ")}).`);
   }
+  const esp = String(especie ?? "").trim();
+  if (esp && !especieValida(esp)) {
+    throw new Error(`Espécie inválida no código ${id} (use: ${Object.keys(ESPECIES).join(", ")}).`);
+  }
   const limpo = {};
   for (const c of CAMPOS) {
     const v = n ? n[c.k] : undefined;
@@ -523,7 +531,7 @@ function montarRegistro(codigo, descricao, imagem, n, composicao, qualidade) {
     if (c.u === "%" && v > 100) throw new Error(`"${c.l}" não pode passar de 100% (código ${id}).`);
     if (v > 0) limpo[c.k] = v;
   }
-  return { id, dados: { codigo: id, descricao: nome, imagem: img, composicao: comp, qualidade: qual, n: limpo, atualizadoEm: serverTimestamp() } };
+  return { id, dados: { codigo: id, descricao: nome, imagem: img, composicao: comp, qualidade: qual, especie: esp, n: limpo, atualizadoEm: serverTimestamp() } };
 }
 
 function lerForm() {
@@ -535,7 +543,7 @@ function lerForm() {
     if (!Number.isFinite(num)) throw new Error(`Valor inválido em "${c.l}".`);
     n[c.k] = num;
   }
-  return montarRegistro($("fCodigo").value, $("fNome").value, "", n, $("fComposicao").value, $("fQualidade").value);
+  return montarRegistro($("fCodigo").value, $("fNome").value, "", n, $("fComposicao").value, $("fQualidade").value, $("fEspecie").value);
 }
 
 function mensagemErroFirebase(e) {
@@ -565,6 +573,7 @@ function preencherForm(id) {
   $("fNome").value = d.descricao || "";
   $("fComposicao").value = d.composicao || "";
   $("fQualidade").value = QUALIDADES.some((q) => q.k === d.qualidade) ? d.qualidade : "";
+  $("fEspecie").value = especieValida(d.especie) ? d.especie : "";
   const n = d.n || {};
   for (const c of CAMPOS) {
     const v = n[c.k];
@@ -615,7 +624,8 @@ function desenharLista() {
   ul.replaceChildren();
   const filtro = $("filtroLista").value.trim().toLowerCase();
   const itens = [...cache.entries()]
-    .filter(([id, d]) => !filtro || id.includes(filtro) || String(d.descricao || "").toLowerCase().includes(filtro))
+    .filter(([id, d]) => !filtro || id.includes(filtro) || String(d.descricao || "").toLowerCase().includes(filtro)
+      || (especieValida(d.especie) ? ESPECIES[d.especie] : "").toLowerCase().includes(filtro))
     .sort((a, b) => String(a[1].descricao || "").localeCompare(String(b[1].descricao || ""), "pt-BR"));
   $("contagem").textContent = `(${cache.size})`;
   if (!itens.length) {
@@ -633,7 +643,12 @@ function desenharLista() {
     ed.addEventListener("click", () => preencherForm(id));
     const del = document.createElement("button"); del.type = "button"; del.className = "perigo"; del.textContent = "Excluir";
     del.addEventListener("click", () => excluir(id));
-    li.append(cod, nom, ver, ed, del);
+    li.append(cod, nom);
+    if (especieValida(d.especie)) {
+      const esp = document.createElement("span"); esp.className = "esp"; esp.textContent = ESPECIES[d.especie];
+      li.append(esp);
+    }
+    li.append(ver, ed, del);
     ul.append(li);
   }
 }
@@ -671,7 +686,8 @@ $("btnImportar").addEventListener("click", async () => {
       const atual = cache.get(normalizarCodigo(r.codigo));
       const comp = r.composicao !== undefined ? r.composicao : (atual ? atual.composicao : "");
       const qual = r.qualidade !== undefined ? r.qualidade : (atual ? atual.qualidade : "");
-      return montarRegistro(r.codigo, r.descricao, r.imagem, r.n, comp, qual);
+      const esp = r.especie !== undefined ? r.especie : (atual ? atual.especie : "");
+      return montarRegistro(r.codigo, r.descricao, r.imagem, r.n, comp, qual, esp);
     });
     const ids = new Set(registros.map((r) => r.id));
     if (ids.size !== registros.length) throw new Error("Há códigos repetidos no arquivo.");

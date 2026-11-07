@@ -32,12 +32,8 @@
 
     body{
       padding: 20px;
-      padding-left: max(20px, env(safe-area-inset-left));
-      padding-right: max(20px, env(safe-area-inset-right));
       min-height: 100vh;
-      min-height: 100dvh;
-      background-image: url("images/bg_img.webp");
-      background-color: var(--texto);
+      background-color: #292015;
     }
     /* Fundo com blur: a imagem fica numa camada própria atrás do conteúdo.
        Para mudar a intensidade, altere o valor de blur(...) */
@@ -50,7 +46,7 @@
       background-repeat: no-repeat;
       background-position: top center;
       background-size: cover;
-      filter: blur(12px);
+      filter: blur(6px);
     }
     body.modal-aberto{ overflow: hidden; }
 
@@ -334,6 +330,7 @@
     .lista .nom{ flex: 1; overflow-wrap: anywhere; }
     .lista button{ padding: 5px 9px; font-size: 12px; }
     .lista a{ font-size: 12px; text-decoration: underline; }
+    .lista .esp{ font-size: 11px; font-weight: bolder; padding: 2px 8px; border-radius: 999px; background: var(--bege); border: 1px solid var(--marrom); white-space: nowrap; }
   </style>
 </head>
 <body>
@@ -458,6 +455,12 @@
               <option value="premium">Premium</option>
               <option value="premium_especial">Premium Especial</option>
               <option value="super_premium">Super Premium</option>
+            </select>
+            <label for="fEspecie">Espécie (uso interno, não aparece na página)</label>
+            <select id="fEspecie">
+              <option value="">Não informado</option>
+              <option value="caes">Cães</option>
+              <option value="gatos">Gatos</option>
             </select>
             <div class="grade" id="gradeNutrientes"></div>
             <label for="fComposicao">Composição (aparece abaixo da tabela; opcional)</label>
