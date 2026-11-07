@@ -558,6 +558,13 @@ function criarCard(r, it) {
   const cod = document.createElement("span");
   cod.textContent = `Código ${r.c}`;
   meta.append(cod);
+  if (especieValida(r.e)) {
+    const chipE = document.createElement("span");
+    chipE.className = "chip-e";
+    chipE.dataset.e = r.e;
+    chipE.textContent = `${r.e === "caes" ? "🐶" : "🐱"} ${ESPECIES[r.e]}`;
+    meta.append(chipE);
+  }
   const qual = QUALIDADES.find((q) => q.k === r.q);
   if (qual) {
     const chip = document.createElement("span");
