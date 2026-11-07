@@ -7,7 +7,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
 import {
   getFirestore, doc, getDoc, setDoc, deleteDoc,
-  collection, getDocs, writeBatch, serverTimestamp
+  collection, getDocs, query, where, Timestamp, writeBatch, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 
 const AUTH_URL = "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
@@ -196,12 +196,47 @@ function desenharRacao(id, d) {
   resultado.hidden = false;
 }
 
+// Cache local (neste aparelho) das rações já consultadas: repetir a consulta não gasta leitura do Firebase.
+// Depois desse tempo a ração é buscada de novo, então edições feitas no painel chegam em até X minutos.
+const CACHE_RACAO_MIN = 30;
+const CACHE_RACAO_PREFIXO = "racao:";
+
+function lerCacheRacao(id) {
+  try {
+    const bruto = localStorage.getItem(CACHE_RACAO_PREFIXO + id);
+    if (!bruto) return null;
+    const o = JSON.parse(bruto);
+    if (!o || !o.d || Date.now() - o.t > CACHE_RACAO_MIN * 60 * 1000) {
+      localStorage.removeItem(CACHE_RACAO_PREFIXO + id);
+      return null;
+    }
+    return o.d;
+  } catch (_) { return null; }
+}
+
+function gravarCacheRacao(id, dados) {
+  try {
+    const { atualizadoEm, ...resto } = dados; // o carimbo de data do Firestore não vai para o cache
+    localStorage.setItem(CACHE_RACAO_PREFIXO + id, JSON.stringify({ t: Date.now(), d: resto }));
+  } catch (_) { /* armazenamento cheio ou bloqueado: segue sem cache */ }
+}
+
+function apagarCacheRacao(id) {
+  try { localStorage.removeItem(CACHE_RACAO_PREFIXO + id); } catch (_) {}
+}
+
 async function carregar(cod) {
   const minha = ++seq;
   const id = normalizarCodigo(cod);
   resultado.hidden = true;
   if (!id) {
     mostrar(estado, "Digite um código válido (somente números).", true);
+    return;
+  }
+  const guardada = lerCacheRacao(id);
+  if (guardada) { // já consultada há pouco: não vai ao Firebase (0 leituras)
+    mostrar(estado, "");
+    desenharRacao(id, guardada);
     return;
   }
   mostrar(estado, "Buscando…");
@@ -213,6 +248,7 @@ async function carregar(cod) {
       return;
     }
     mostrar(estado, "");
+    gravarCacheRacao(id, snap.data());
     desenharRacao(id, snap.data());
   } catch (e) {
     if (minha !== seq) return;
@@ -595,6 +631,8 @@ $("formRacao").addEventListener("submit", async (e) => {
   try {
     await setDoc(doc(db, "racoes", reg.id), reg.dados);
     cache.set(reg.id, { ...reg.dados, atualizadoEm: null });
+    salvarListaLocal();
+    apagarCacheRacao(reg.id);
     desenharLista();
     limparForm();
     mostrar($("msgForm"), `Ração ${reg.id} salva com sucesso.`);
@@ -607,17 +645,82 @@ $("formRacao").addEventListener("submit", async (e) => {
 });
 
 /* ----- lista ----- */
-async function carregarLista() {
+// A lista fica guardada neste aparelho. Ao abrir o painel só se baixa o que mudou desde a última
+// sincronização (rações com atualizadoEm mais novo): normalmente 0 ou 1 leitura, em vez de ler o banco todo.
+// Só o botão "Recarregar tudo" lê a coleção inteira (e é o único jeito de notar exclusões feitas em outro aparelho).
+const LISTA_LOCAL = "racoes_lista_v1";
+let ultimoSync = null; // { s: segundos, n: nanossegundos } do documento mais novo já baixado
+
+function carimboDe(dados) {
+  const t = dados && dados.atualizadoEm;
+  return t && typeof t.seconds === "number" ? { s: t.seconds, n: t.nanoseconds || 0 } : null;
+}
+function maisNovo(a, b) {
+  if (!a) return b;
+  if (!b) return a;
+  return (b.s > a.s || (b.s === a.s && b.n > a.n)) ? b : a;
+}
+
+function salvarListaLocal() {
   try {
-    const snap = await getDocs(collection(db, "racoes"));
-    cache = new Map();
-    snap.forEach((d) => cache.set(d.id, d.data()));
+    const itens = [...cache].map(([id, d]) => [id, { ...d, atualizadoEm: null }]);
+    localStorage.setItem(LISTA_LOCAL, JSON.stringify({ v: 1, sync: ultimoSync, itens }));
+  } catch (_) { /* sem espaço: a próxima abertura baixa a lista de novo */ }
+}
+
+function lerListaLocal() {
+  try {
+    const o = JSON.parse(localStorage.getItem(LISTA_LOCAL) || "null");
+    if (!o || o.v !== 1 || !Array.isArray(o.itens) || !o.sync) return false;
+    if (!Number.isFinite(o.sync.s) || !Number.isFinite(o.sync.n)) return false;
+    cache = new Map(o.itens);
+    ultimoSync = o.sync;
+    return true;
+  } catch (_) { return false; }
+}
+
+function infoLista(leituras) {
+  $("infoLista").textContent =
+    `Lista guardada neste aparelho. Leituras do Firebase nesta atualização: ${leituras}.`;
+}
+
+async function carregarLista(completa = false) {
+  try {
+    let leituras;
+    if (!completa && lerListaLocal()) {
+      desenharLista(); // mostra na hora, sem gastar leituras
+      const q = query(collection(db, "racoes"), where("atualizadoEm", ">", new Timestamp(ultimoSync.s, ultimoSync.n)));
+      const snap = await getDocs(q);
+      snap.forEach((d) => {
+        cache.set(d.id, d.data());
+        ultimoSync = maisNovo(ultimoSync, carimboDe(d.data()));
+      });
+      leituras = Math.max(1, snap.size); // consulta sem resultado também cobra 1 leitura
+    } else {
+      const snap = await getDocs(collection(db, "racoes"));
+      cache = new Map();
+      ultimoSync = null;
+      snap.forEach((d) => {
+        cache.set(d.id, d.data());
+        ultimoSync = maisNovo(ultimoSync, carimboDe(d.data()));
+      });
+      leituras = snap.size;
+    }
+    salvarListaLocal();
     desenharLista();
+    infoLista(leituras);
   } catch (e) {
     console.error(e);
     mostrar($("msgForm"), mensagemErroFirebase(e), true);
   }
 }
+
+$("btnRecarregarLista").addEventListener("click", async () => {
+  if (!confirm(`Recarregar tudo do servidor? Isso lê todas as rações cadastradas (${cache.size || "várias"} leituras do seu limite diário).`)) return;
+  const btn = $("btnRecarregarLista");
+  btn.disabled = true;
+  try { await carregarLista(true); } finally { btn.disabled = false; }
+});
 
 function desenharLista() {
   const ul = $("lista");
@@ -660,6 +763,8 @@ async function excluir(id) {
   try {
     await deleteDoc(doc(db, "racoes", id));
     cache.delete(id);
+    salvarListaLocal();
+    apagarCacheRacao(id);
     if (editando === id) limparForm();
     desenharLista();
     mostrar($("msgForm"), `Ração ${id} excluída.`);
