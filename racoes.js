@@ -11,7 +11,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 
 const UID_ADMIN  = "n5PPxLQcMrNlvgElYpcKX61f9c42";  // painel de rações
-const UID_PRECOS = "NHUFYqM7FLX6HiDuW78nap8SOSx1";  // cadastro de valores
+const UID_PRECOS = "n5PPxLQcMrNlvgElYpcKX61f9c42";  // cadastro de valores
 const AUTH_URL = "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
 
 // Projeto Firebase próprio das rações (racoes-f0291). Esses dados são públicos por natureza;
