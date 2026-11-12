@@ -294,6 +294,18 @@
     }
     footer button:hover{ background: none; }
 
+    /* ===== Valores ===== */
+    .preco-kg{ margin-top: 4px; font-size: 13px; opacity: .75; }
+    .ib-preco{ margin-left: auto; font-size: 12px; opacity: .8; white-space: nowrap; }
+    #valores .ib-preco{ font-size: 15px; font-weight: bolder; opacity: 1; color: var(--verde); }
+    #valores .resultados-busca{ width: 100%; max-width: none; }
+    #valores .busca-info{ color: var(--texto); text-shadow: none; }
+    .v-exato{ margin-top: 14px; padding: 14px; background: #fff; border: 2px solid var(--marrom); border-radius: 16px; }
+    .ve-nome{ font-family: var(--font2); font-size: 18px; overflow-wrap: anywhere; }
+    .ve-linha{ margin-top: 6px; font-size: 14px; }
+    .ve-aviso{ color: #b3261e; font-weight: bolder; }
+    .ve-total{ margin-top: 10px; font-size: 28px; font-family: var(--font2); color: var(--verde); }
+
     /* ===== Leitor de QR Code ===== */
     .qr-btn{ width: 100%; margin-top: 12px; }
     .leitor{
@@ -386,7 +398,7 @@
         <input type="text" id="campoCodigo" inputmode="text" maxlength="80" placeholder="Ex: 0151 ou gatos castrados salmão" aria-describedby="dicaBusca" enterkeyhint="search">
         <button type="submit">Buscar</button>
       </div>
-      <p class="dica" id="dicaBusca">O código está na etiqueta da prateleira. Busque também por nome, espécie ou qualidade (ex.: “cães proteína acima de 28”).</p>
+      <p class="dica" id="dicaBusca">O código está na etiqueta da prateleira. Também dá para buscar por nome, espécie, qualidade ou nível (ex.: “qua cast salm”, “cães proteína acima de 28”).</p>
       <button type="button" class="sec qr-btn" id="abrirLeitor">📷 Ler QR Code</button>
     </form>
 
@@ -407,6 +419,7 @@
         <div class="rotulo">Ração</div>
         <h2 id="nomeRacao"></h2>
         <div class="codigo">Código: <span id="codigoRacao"></span></div>
+        <div class="preco-kg" id="precoRacao" hidden></div>
       </div>
 
       <!-- Qualidade: só aparece se a ração tiver qualidade cadastrada -->
@@ -434,10 +447,75 @@
     <footer>
       <a href="https://github.com/joaovitorjeremias" target="_blank" rel="noopener noreferrer">&copy; João Vitor</a>
       · <button type="button" id="abrirAdmin">Área restrita</button>
+      · <button type="button" id="abrirValores">Valores</button>
     </footer>
   </div>
 
   <noscript><div class="estado erro" style="margin: 20px auto;">Ative o JavaScript para consultar as rações.</div></noscript>
+
+  <!-- Painel de valores (contas logadas) -->
+  <div class="admin" id="valores" hidden role="dialog" aria-modal="true" aria-label="Valores">
+    <div class="admin-caixa">
+      <div id="vLogin">
+        <div class="admin-topo">
+          <h3>Valores</h3>
+          <button type="button" class="sec" data-fechar-valores>Fechar</button>
+        </div>
+        <form id="vFormLogin" autocomplete="on">
+          <label for="vEmail">E-mail</label>
+          <input type="email" id="vEmail" autocomplete="username" required>
+          <label for="vSenha">Senha</label>
+          <input type="password" id="vSenha" autocomplete="current-password" required>
+          <div class="linha-botoes"><button type="submit" id="vBtnEntrar">Entrar</button></div>
+        </form>
+        <div class="msg erro" id="vMsgLogin" hidden></div>
+      </div>
+
+      <div id="vPainel" hidden>
+        <div class="admin-topo">
+          <h3>Valores</h3>
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="sec" id="vSair">Sair</button>
+            <button type="button" class="sec" data-fechar-valores>Fechar</button>
+          </div>
+        </div>
+        <p class="dica" id="vLogadoComo"></p>
+
+        <section>
+          <form id="vFormBusca" autocomplete="off">
+            <label for="vCampo">Código da ração, código de barras da balança ou nome</label>
+            <div class="busca">
+              <input type="text" id="vCampo" inputmode="text" maxlength="80" placeholder="Ex: 2016500010102, 0165 ou gatos até 10 reais">
+              <button type="submit">Buscar</button>
+            </div>
+          </form>
+          <div class="msg" id="vMsg" hidden></div>
+          <div class="v-exato" id="vExato" hidden></div>
+          <div class="resultados-busca" id="vCards" hidden>
+            <p class="busca-info" id="vInfo"></p>
+            <div id="vLista"></div>
+            <button type="button" class="sec mais-busca" id="vMais" hidden>Mostrar mais</button>
+          </div>
+        </section>
+
+        <section id="vEscrita" hidden>
+          <h3>Cadastrar valores</h3>
+          <p class="dica">Importe a planilha (CSV com código, descrição e preço por kg, ou JSON). O valor antigo de cada código é substituído pelo novo; valor 0 remove.</p>
+          <label for="vArquivo">Arquivo CSV ou JSON</label>
+          <input type="file" id="vArquivo" accept=".csv,.json,.txt,application/json,text/csv">
+          <div class="linha-botoes"><button type="button" id="vImportar">Importar valores</button></div>
+          <form id="vFormAdd" autocomplete="off">
+            <div class="grade">
+              <div><label for="vCod">Código</label><input type="text" id="vCod" inputmode="numeric" maxlength="8" placeholder="Ex: 0165"></div>
+              <div><label for="vPreco">Valor do quilo (R$)</label><input type="text" id="vPreco" inputmode="decimal" placeholder="Ex: 9,90"></div>
+            </div>
+            <div class="linha-botoes"><button type="submit">Salvar valor</button></div>
+          </form>
+          <div class="msg" id="vMsgEscrita" hidden></div>
+        </section>
+      </div>
+    </div>
+  </div>
 
   <!-- Leitor de QR Code -->
   <div class="leitor" id="leitor" hidden role="dialog" aria-modal="true" aria-label="Leitor de QR Code">

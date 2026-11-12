@@ -7,9 +7,11 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
 import {
   getFirestore, doc, getDoc, setDoc, deleteDoc,
-  collection, getDocs, query, where, Timestamp, writeBatch, serverTimestamp
+  collection, getDocs, query, where, Timestamp, writeBatch, serverTimestamp, deleteField
 } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 
+const UID_ADMIN  = "n5PPxLQcMrNlvgElYpcKX61f9c42";  // painel de rações
+const UID_PRECOS = "NHUFYqM7FLX6HiDuW78nap8SOSx1";  // cadastro de valores
 const AUTH_URL = "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
 
 // Projeto Firebase próprio das rações (racoes-f0291). Esses dados são públicos por natureza;
@@ -64,6 +66,9 @@ const especieValida = (v) => typeof v === "string" && Object.prototype.hasOwnPro
 
 const $ = (id) => document.getElementById(id);
 const nf = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 4 });
+const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+const CAMPO_PRECO = { k: "preco", l: "Preço por kg", u: "R$/kg" };
+const campoDe = (k) => (k === "preco" ? CAMPO_PRECO : CAMPOS.find((c) => c.k === k));
 
 /* ---------------------------- utilidades ---------------------------- */
 
@@ -90,6 +95,7 @@ function valorVisivel(v) {
 }
 
 function formatar(campo, v) {
+  if (campo.k === "preco") return `${brl.format(v)}/kg`;
   return campo.u === "%" ? `${nf.format(v)}%` : `${nf.format(v)} ${campo.u}`;
 }
 
@@ -161,11 +167,20 @@ function desenharQualidade(valor) {
   cartao.hidden = false;
 }
 
+async function mostrarPrecoRacao(id) {
+  const el = $("precoRacao");
+  el.hidden = true;
+  const p = await obterPrecos();
+  const v = p["c" + id];
+  if ($("codigoRacao").textContent === id && v > 0) { el.textContent = `${brl.format(v)}/kg`; el.hidden = false; }
+}
+
 function desenharRacao(id, d) {
   $("nomeRacao").textContent = String(d.descricao ?? "");
   $("codigoRacao").textContent = id;
   desenharFoto(id);
   desenharQualidade(d.qualidade);
+  mostrarPrecoRacao(id);
 
   const tbody = $("tabelaNiveis");
   tbody.replaceChildren();
@@ -338,6 +353,7 @@ const NUTRIENTE_ALIAS = {
   extrato_etereo: ["gordura", "gorduras", "lipidio", "lipidios", "etereo"],
   materia_mineral: ["mineral", "minerais", "cinza", "cinzas"],
   materia_fibrosa: ["fibra", "fibras", "fibrosa"],
+  preco: ["preco", "precos", "valor", "valores", "reais", "real", "custo", "r", "rs"],
   umidade: ["umidade"],
   calcio: ["calcio"], fosforo: ["fosforo"], sodio: ["sodio"], potassio: ["potassio"],
   extrato_yucca: ["yucca", "yuca"],
@@ -351,6 +367,14 @@ for (const [k, lista] of Object.entries(NUTRIENTE_ALIAS)) for (const a of lista)
 // Palavras que representam uma necessidade (não um nutriente citado diretamente)
 const NECESSIDADE = {
   light:        { k: "extrato_etereo", dir: "asc" },
+  barato:       { k: "preco", dir: "asc" },
+  barata:       { k: "preco", dir: "asc" },
+  baratos:      { k: "preco", dir: "asc" },
+  baratas:      { k: "preco", dir: "asc" },
+  caro:         { k: "preco", dir: "desc" },
+  cara:         { k: "preco", dir: "desc" },
+  caros:        { k: "preco", dir: "desc" },
+  caras:        { k: "preco", dir: "desc" },
   odor:         { k: "extrato_yucca" },
   cheiro:       { k: "extrato_yucca" },
   articulacao:  { qualquer: ["sulfato_condroitina", "sulfato_glicosamina"] },
@@ -403,7 +427,7 @@ function interpretar(tokens) {
     }
     exige.push(it.k);
     if (num !== null) {
-      filtros.push({ k: it.k, op: cmp === "menos" ? "<=" : ">=", val: num });
+      filtros.push({ k: it.k, op: (cmp === "menos" || (cmp === null && it.k === "preco")) ? "<=" : ">=", val: num });
       consumido[numIdx] = true;
       if (cmpIdx >= 0) consumido[cmpIdx] = true;
     } else {
@@ -501,6 +525,33 @@ const INDICE_MIN = 30;      // minutos que o índice fica guardado no aparelho
 const CARDS_POR_VEZ = 20;
 let indicePronto = null;
 
+const PRECOS_LOCAL = "racoes_precos_v1";
+let precosMem = null; // { c0165: 9.9, ... }
+
+async function obterPrecos(forcar = false) {
+  if (precosMem && !forcar) return precosMem;
+  if (!forcar) {
+    try {
+      const o = JSON.parse(localStorage.getItem(PRECOS_LOCAL) || "null");
+      if (o && o.p && Date.now() - o.t <= INDICE_MIN * 60 * 1000) return (precosMem = o.p);
+    } catch (_) {}
+  }
+  let p = {};
+  try {
+    const snap = await getDoc(doc(db, "busca", "precos"));
+    if (snap.exists() && snap.data().p) p = snap.data().p;
+  } catch (e) { console.error(e); return precosMem || {}; } // sem preço, o resto do site segue funcionando
+  precosMem = p;
+  try { localStorage.setItem(PRECOS_LOCAL, JSON.stringify({ t: Date.now(), p })); } catch (_) {}
+  return p;
+}
+
+function invalidarPrecos() {
+  precosMem = null;
+  indicePronto = null;
+  try { localStorage.removeItem(PRECOS_LOCAL); } catch (_) {}
+}
+
 async function obterIndice() {
   if (indicePronto) return indicePronto;
   let bruto = null;
@@ -516,7 +567,11 @@ async function obterIndice() {
   }
   const lista = JSON.parse(bruto);
   if (!Array.isArray(lista)) throw new Error("indice-invalido");
-  indicePronto = prepararIndice(lista.filter((r) => r && typeof r.c === "string" && typeof r.d === "string"));
+  const precos = await obterPrecos();
+  indicePronto = prepararIndice(lista.filter((r) => r && typeof r.c === "string" && typeof r.d === "string").map((r) => {
+    const v = precos["c" + r.c];
+    return v > 0 ? { ...r, n: { ...(r.n || {}), preco: v } } : r; // preço entra como "nível" pesquisável
+  }));
   return indicePronto;
 }
 
@@ -524,9 +579,9 @@ function esconderCards() { $("resultadosBusca").hidden = true; }
 
 function descreverFiltros(it) {
   const partes = [];
-  const rotulo = (k) => (CAMPOS.find((c) => c.k === k) || {}).l || k;
+  const rotulo = (k) => (campoDe(k) || {}).l || k;
   for (const f of it.filtros) {
-    const c = CAMPOS.find((x) => x.k === f.k);
+    const c = campoDe(f.k);
     partes.push(`${rotulo(f.k)} ${f.op === ">=" ? "a partir de" : "até"} ${c ? formatar(c, f.val) : f.val}`);
   }
   for (const k of it.exige) if (!it.filtros.some((f) => f.k === k)) partes.push(`com ${rotulo(k)}`);
@@ -536,11 +591,12 @@ function descreverFiltros(it) {
   return partes;
 }
 
-function criarCard(r, it) {
+function criarCard(r, it, aoClicar) {
   const a = document.createElement("a");
   a.className = "item-busca";
   a.href = `?cod=${r.c}`;
   a.addEventListener("click", (e) => {
+    if (aoClicar) { e.preventDefault(); aoClicar(r); return; }
     if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return; // deixa abrir em nova aba
     e.preventDefault();
     history.pushState(null, "", `?cod=${r.c}`);
@@ -574,6 +630,13 @@ function criarCard(r, it) {
     meta.append(chip);
   }
 
+  if (valorVisivel(r.n && r.n.preco)) {
+    const pr = document.createElement("span");
+    pr.className = "ib-preco";
+    pr.textContent = formatar(CAMPO_PRECO, r.n.preco);
+    meta.append(pr);
+  }
+
   // Destaca os níveis que a pessoa pediu; sem pedido, proteína e gordura
   const chaves = [...it.exige, ...it.qualquer.flat()];
   const mostrarK = [...new Set(chaves.length ? chaves : ["proteina_bruta", "extrato_etereo"])];
@@ -593,14 +656,14 @@ function criarCard(r, it) {
   return a;
 }
 
-function mostrarCards(achados, it, texto, aproximado) {
-  const box = $("resultadosBusca");
-  const lista = $("listaBusca");
-  const mais = $("maisBusca");
+function mostrarCards(achados, it, texto, aproximado, alvo = ["resultadosBusca", "listaBusca", "maisBusca", "buscaInfo"], aoClicar) {
+  const box = $(alvo[0]);
+  const lista = $(alvo[1]);
+  const mais = $(alvo[2]);
   lista.replaceChildren();
   let exibidos = 0;
   const ver = () => {
-    for (const r of achados.slice(exibidos, exibidos + CARDS_POR_VEZ)) lista.append(criarCard(r, it));
+    for (const r of achados.slice(exibidos, exibidos + CARDS_POR_VEZ)) lista.append(criarCard(r, it, aoClicar));
     exibidos = Math.min(achados.length, exibidos + CARDS_POR_VEZ);
     mais.hidden = exibidos >= achados.length;
     mais.textContent = `Mostrar mais (${achados.length - exibidos})`;
@@ -612,7 +675,7 @@ function mostrarCards(achados, it, texto, aproximado) {
     : `${n} ${n > 1 ? "rações" : "ração"} para “${texto}”.`;
   const filtros = descreverFiltros(it);
   if (filtros.length) info += ` Considerando: ${filtros.join("; ")}.`;
-  $("buscaInfo").textContent = info;
+  $(alvo[3]).textContent = info;
   ver();
   box.hidden = false;
 }
@@ -906,15 +969,28 @@ async function iniciarAuth() {
   } catch (e) {
     console.error(e);
     mostrar($("msgLogin"), "Não foi possível carregar o login. Verifique a conexão.", true);
+    mostrar($("vMsgLogin"), "Não foi possível carregar o login. Verifique a conexão.", true);
   }
 }
 
 async function aoMudarUsuario(user) {
-  $("viewLogin").hidden = !!user;
-  $("viewPainel").hidden = !user;
+  const ehAdm = !!user && user.uid === UID_ADMIN;
+  // painel de rações: só a conta administradora
+  $("viewLogin").hidden = ehAdm;
+  $("viewPainel").hidden = !ehAdm;
+  // painel de valores: qualquer conta logada pesquisa; só a conta de preços cadastra
+  $("vLogin").hidden = !!user;
+  $("vPainel").hidden = !user;
+  $("vEscrita").hidden = !(user && user.uid === UID_PRECOS);
+  $("loginSenha").value = "";
+  $("vSenha").value = "";
+  mostrar($("msgLogin"), user && !ehAdm ? "Esta conta não tem acesso ao painel de rações. Use o botão Valores." : "", true);
   if (user) {
+    $("vLogadoComo").textContent = `Conectado como ${user.email}`;
+    invalidarPrecos(); // o painel de valores sempre parte dos preços mais novos
+  }
+  if (ehAdm) {
     $("logadoComo").textContent = `Conectado como ${user.email}`;
-    $("loginSenha").value = "";
     await carregarLista();
   } else {
     cache = new Map();
@@ -922,27 +998,201 @@ async function aoMudarUsuario(user) {
   }
 }
 
-$("formLogin").addEventListener("submit", async (e) => {
+function ligarLogin(form, email, senha, botao, msg) {
+  $(form).addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!auth) { await iniciarAuth(); if (!auth) return; }
+    const btn = $(botao);
+    btn.disabled = true;
+    mostrar($(msg), "");
+    try {
+      await authMod.signInWithEmailAndPassword(auth, $(email).value.trim(), $(senha).value);
+    } catch (err) {
+      const c = err && err.code;
+      let m = "E-mail ou senha incorretos.";
+      if (c === "auth/too-many-requests") m = "Muitas tentativas. Aguarde alguns minutos e tente de novo.";
+      else if (c === "auth/network-request-failed") m = "Sem conexão com o servidor.";
+      else if (c === "auth/operation-not-allowed") m = "O login por e-mail/senha ainda não foi ativado no Firebase.";
+      mostrar($(msg), m, true);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+}
+ligarLogin("formLogin", "loginEmail", "loginSenha", "btnEntrar", "msgLogin");
+ligarLogin("vFormLogin", "vEmail", "vSenha", "vBtnEntrar", "vMsgLogin");
+
+$("btnSair").addEventListener("click", () => authMod && authMod.signOut(auth));
+$("vSair").addEventListener("click", () => authMod && authMod.signOut(auth));
+
+/* ------------------------- painel de valores (contas logadas) ------------------------- */
+function abrirValores() {
+  $("valores").hidden = false;
+  document.body.classList.add("modal-aberto");
+  iniciarAuth();
+}
+function fecharValores() {
+  $("valores").hidden = true;
+  document.body.classList.remove("modal-aberto");
+}
+$("abrirValores").addEventListener("click", abrirValores);
+document.querySelectorAll("[data-fechar-valores]").forEach((b) => b.addEventListener("click", fecharValores));
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("valores").hidden) fecharValores(); });
+
+const nfPeso = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+
+// Código de balança (EAN-13): 2 + código da ração (4) + peso em gramas (7) + dígito verificador
+function lerBarras(txt) {
+  const d = [...txt].map(Number);
+  const soma = d.slice(0, 12).reduce((s, v, i) => s + v * (i % 2 ? 3 : 1), 0);
+  if ((10 - (soma % 10)) % 10 !== d[12]) return { erro: "Código de barras inválido (o dígito verificador não confere)." };
+  if (d[0] !== 2) return { erro: "Não é um código de balança (deve começar com 2)." };
+  return { id: txt.slice(1, 5), kg: parseInt(txt.slice(5, 12), 10) / 1000 };
+}
+
+function linhaEl(cls, texto) {
+  const el = document.createElement("div");
+  el.className = cls;
+  el.textContent = texto;
+  return el;
+}
+
+async function mostrarExato(id, kg) {
+  const box = $("vExato");
+  box.replaceChildren();
+  let lista = [];
+  try { lista = await obterIndice(); } catch (_) { /* sem índice: mostra só o preço */ }
+  const precos = await obterPrecos();
+  const r = lista.find((x) => x.c === id);
+  const preco = precos["c" + id];
+  box.append(linhaEl("ve-nome", r ? r.d : `Código ${id} (ração não encontrada)`));
+  box.append(linhaEl("ve-linha", `Código ${id}`));
+  if (!(preco > 0)) {
+    box.append(linhaEl("ve-linha ve-aviso", "Sem valor cadastrado para este código."));
+  } else {
+    box.append(linhaEl("ve-linha", `Valor do quilo: ${brl.format(preco)}`));
+    if (kg) {
+      box.append(linhaEl("ve-linha", `Peso: ${nfPeso.format(kg)} kg`));
+      box.append(linhaEl("ve-total", brl.format(Math.round(preco * kg * 100) / 100)));
+    }
+  }
+  box.hidden = false;
+}
+
+$("vFormBusca").addEventListener("submit", async (e) => {
   e.preventDefault();
-  if (!auth) { await iniciarAuth(); if (!auth) return; }
-  const btn = $("btnEntrar");
-  btn.disabled = true;
-  mostrar($("msgLogin"), "");
+  const txt = $("vCampo").value.trim();
+  $("vExato").hidden = true;
+  $("vCards").hidden = true;
+  mostrar($("vMsg"), "");
+  if (!txt) return;
+  if (/^\d+$/.test(txt)) { // código da ração ou código de barras da balança
+    if (txt.length === 13) {
+      const b = lerBarras(txt);
+      if (b.erro) return mostrar($("vMsg"), b.erro, true);
+      return mostrarExato(b.id, b.kg);
+    }
+    const id = normalizarCodigo(txt);
+    return id ? mostrarExato(id, null) : mostrar($("vMsg"), "Código inválido.", true);
+  }
+  if (!tokenizar(txt).length) return;
+  mostrar($("vMsg"), "Buscando…");
   try {
-    await authMod.signInWithEmailAndPassword(auth, $("loginEmail").value.trim(), $("loginSenha").value);
+    const lista = await obterIndice();
+    const { itens, it, aproximado } = buscarRacoes(txt.slice(0, 80), lista);
+    if (!itens.length) return mostrar($("vMsg"), `Nenhuma ração encontrada para “${txt}”.`, true);
+    mostrar($("vMsg"), "");
+    mostrarCards(itens, it, txt, aproximado, ["vCards", "vLista", "vMais", "vInfo"], (r) => mostrarExato(r.c, null));
   } catch (err) {
-    const c = err && err.code;
-    let m = "E-mail ou senha incorretos.";
-    if (c === "auth/too-many-requests") m = "Muitas tentativas. Aguarde alguns minutos e tente de novo.";
-    else if (c === "auth/network-request-failed") m = "Sem conexão com o servidor.";
-    else if (c === "auth/operation-not-allowed") m = "O login por e-mail/senha ainda não foi ativado no Firebase.";
-    mostrar($("msgLogin"), m, true);
+    console.error(err);
+    mostrar($("vMsg"), err.message === "sem-indice" ? "O índice de busca ainda não foi gerado no painel de rações." : "Não foi possível buscar agora.", true);
+  }
+});
+
+/* ----- cadastro de valores (somente a conta de preços; a regra do Firestore também exige isso) ----- */
+const numeroBR = (s) => parseFloat(String(s).replace(/[^\d,.-]/g, "").replace(/\.(?=\d{3}(\D|$))/g, "").replace(",", "."));
+
+function dividirCsv(linha, d) {
+  const out = []; let cur = "", asp = false;
+  for (const ch of linha) {
+    if (ch === '"') asp = !asp;
+    else if (ch === d && !asp) { out.push(cur); cur = ""; }
+    else cur += ch;
+  }
+  out.push(cur);
+  return out;
+}
+
+// Aceita JSON ({"0165": 9.9} ou [{codigo, preco}]) ou CSV (código; descrição; preço por kg)
+function lerPrecos(texto) {
+  const t = texto.replace(/^\uFEFF/, "").trim();
+  const bruto = [];
+  if (t.startsWith("{") || t.startsWith("[")) {
+    const dados = JSON.parse(t);
+    if (Array.isArray(dados)) dados.forEach((x) => bruto.push([x.codigo ?? x.cod, x.preco ?? x.valor]));
+    else Object.entries(dados).forEach(([c, v]) => bruto.push([c, v]));
+  } else {
+    const linhas = t.split(/\r?\n/).filter((l) => l.trim());
+    const d = (linhas[0] || "").includes(";") ? ";" : ",";
+    for (const l of linhas) { const c = dividirCsv(l, d); bruto.push([c[0], c[c.length - 1]]); }
+  }
+  const mapa = {}; let ignoradas = 0;
+  for (const [c, v] of bruto) {
+    const m = /^\s*(\d+)/.exec(String(c ?? ""));         // "0379 / 91444042" vale como 0379
+    const id = m && normalizarCodigo(m[1]);
+    const preco = typeof v === "number" ? v : numeroBR(v ?? "");
+    if (!id || !Number.isFinite(preco) || preco < 0 || preco > 100000) { ignoradas++; continue; }
+    mapa[id] = preco;
+  }
+  return { mapa, ignoradas };
+}
+
+// Substitui o preço antigo pelo novo, código a código (preço 0 remove o valor)
+async function gravarPrecos(mapa) {
+  const p = {};
+  for (const [id, v] of Object.entries(mapa)) p["c" + id] = v > 0 ? Math.round(v * 100) / 100 : deleteField();
+  await setDoc(doc(db, "busca", "precos"), { p, atualizadoEm: serverTimestamp() }, { merge: true });
+  invalidarPrecos();
+}
+
+function erroPrecos(e) {
+  return e && e.code === "permission-denied" ? "Sem permissão: só a conta de cadastro de valores pode gravar." : erroTexto(e);
+}
+
+$("vImportar").addEventListener("click", async () => {
+  const arq = $("vArquivo").files[0];
+  if (!arq) return mostrar($("vMsgEscrita"), "Escolha o arquivo (CSV ou JSON).", true);
+  const btn = $("vImportar");
+  btn.disabled = true;
+  try {
+    const { mapa, ignoradas } = lerPrecos(await arq.text());
+    const n = Object.keys(mapa).length;
+    if (!n) throw new Error("Nenhum valor válido encontrado no arquivo.");
+    await gravarPrecos(mapa);
+    $("vArquivo").value = "";
+    mostrar($("vMsgEscrita"), `${n} valores gravados (os antigos foram substituídos).${ignoradas ? ` ${ignoradas} linha(s) ignorada(s).` : ""}`);
+  } catch (err) {
+    console.error(err);
+    mostrar($("vMsgEscrita"), erroPrecos(err), true);
   } finally {
     btn.disabled = false;
   }
 });
 
-$("btnSair").addEventListener("click", () => authMod && authMod.signOut(auth));
+$("vFormAdd").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const id = normalizarCodigo($("vCod").value);
+  const preco = numeroBR($("vPreco").value);
+  if (!id || !Number.isFinite(preco) || preco < 0 || preco > 100000) return mostrar($("vMsgEscrita"), "Informe um código e um valor por quilo válidos.", true);
+  try {
+    await gravarPrecos({ [id]: preco });
+    $("vFormAdd").reset();
+    mostrar($("vMsgEscrita"), preco > 0 ? `Valor da ração ${id} atualizado para ${brl.format(preco)}/kg.` : `Valor da ração ${id} removido.`);
+  } catch (err) {
+    console.error(err);
+    mostrar($("vMsgEscrita"), erroPrecos(err), true);
+  }
+});
 
 /* ----- validação (usada no formulário e na importação) ----- */
 function montarRegistro(codigo, descricao, imagem, n, composicao, qualidade, especie) {
