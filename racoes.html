@@ -295,7 +295,24 @@
     footer button:hover{ background: none; }
 
     /* ===== Valores ===== */
-    .preco-kg{ margin-top: 4px; font-size: 13px; opacity: .75; white-space: pre-line; }
+    .granel-topo{ display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+    .granel-kg{ font-size: 13px; opacity: .75; white-space: nowrap; }
+    .granel-pacotes{ display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-top: 12px; }
+    .granel-pacotes:empty{ display: none; }
+    .pacote{
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      padding: 10px 8px;
+      background: #fff;
+      border: 2px dashed var(--marrom);
+      border-radius: 14px;
+    }
+    .pacote .pk-kg{ font-size: 12px; letter-spacing: .06em; text-transform: uppercase; opacity: .75; }
+    .pacote .pk-valor{ font-family: var(--font2); font-size: 22px; color: var(--verde); }
+    /* versão compacta nos cards da busca */
+    .ib-pacotes{ display: flex; gap: 8px; margin-top: 10px; }
+    .ib-pacotes .pacote{ flex: 1; flex-direction: row; justify-content: space-between; align-items: baseline; padding: 6px 10px; border-width: 1px; border-radius: 10px; }
+    .ib-pacotes .pk-kg{ font-size: 11px; }
+    .ib-pacotes .pk-valor{ font-size: 15px; }
     .ib-preco{ margin-left: auto; font-size: 12px; opacity: .8; white-space: nowrap; }
     #valores .ib-preco{ font-size: 15px; font-weight: bolder; opacity: 1; color: var(--verde); }
     #valores .resultados-busca{ width: 100%; max-width: none; }
@@ -419,7 +436,6 @@
         <div class="rotulo">Ração</div>
         <h2 id="nomeRacao"></h2>
         <div class="codigo">Código: <span id="codigoRacao"></span></div>
-        <div class="preco-kg" id="precoRacao" hidden></div>
       </div>
 
       <!-- Qualidade: só aparece se a ração tiver qualidade cadastrada -->
@@ -429,6 +445,15 @@
         <div class="q-escala" id="qEscala" role="img"></div>
       </div>
 
+
+      <!-- Valores dos pacotes servidos no granel (só aparece se a ração tiver valor cadastrado) -->
+      <div class="cartao granel fade-item" id="cartaoGranel" style="--i: 2;" hidden>
+        <div class="granel-topo">
+          <h3>⚖️ No granel</h3>
+          <span class="granel-kg" id="granelKg"></span>
+        </div>
+        <div class="granel-pacotes" id="granelPacotes"></div>
+      </div>
 
       <div class="cartao tabela-card fade-item" style="--i: 2;">
         <h3>Níveis de garantia</h3>
@@ -481,7 +506,19 @@
         </div>
         <p class="dica" id="vLogadoComo"></p>
 
+        <section class="so-precos" hidden>
+          <h3>Registrar pacotes (leitor da balança)</h3>
+          <p class="dica">Leia a etiqueta do pacote maior e, em seguida, a do menor da mesma ração: o cursor pula sozinho de um campo para o outro. Ao ler a etiqueta de outra ração, os pesos antigos dela são apagados e substituídos pelo novo.</p>
+          <div class="grade">
+            <div><label for="vLeitorMaior">Maior</label><input type="text" id="vLeitorMaior" inputmode="numeric" maxlength="13" autocomplete="off" placeholder="Leia a etiqueta"></div>
+            <div><label for="vLeitorMenor">Menor</label><input type="text" id="vLeitorMenor" inputmode="numeric" maxlength="13" autocomplete="off" placeholder="Leia a etiqueta"></div>
+          </div>
+          <div class="msg" id="vMsgRegistro" hidden></div>
+          <div class="v-exato" id="vRegistro" hidden></div>
+        </section>
+
         <section>
+          <h3>Consultar valores</h3>
           <form id="vFormBusca" autocomplete="off">
             <label for="vCampo">Código da ração, código de barras da balança ou nome</label>
             <div class="busca">
@@ -498,8 +535,8 @@
           </div>
         </section>
 
-        <section id="vEscrita" hidden>
-          <h3>Cadastrar valores</h3>
+        <section class="so-precos" hidden>
+          <h3>Importar valores do quilo</h3>
           <p class="dica">Importe a planilha (CSV com código, descrição e valor do quilo, ou JSON). O valor antigo de cada código é substituído pelo novo; valor 0 remove.</p>
           <label for="vArquivo">Arquivo CSV ou JSON</label>
           <input type="file" id="vArquivo" accept=".csv,.json,.txt,application/json,text/csv">
@@ -512,15 +549,6 @@
             <div class="linha-botoes"><button type="submit">Salvar valor</button></div>
           </form>
           <div class="msg" id="vMsgEscrita" hidden></div>
-
-          <h3 style="margin-top:22px;">Registrar pacotes (leitor da balança)</h3>
-          <p class="dica">Leia a etiqueta do pacote maior e, em seguida, a do menor da mesma ração: o cursor pula sozinho de um campo para o outro. Ao ler a etiqueta de outra ração, os pesos antigos dela são apagados e substituídos pelo novo.</p>
-          <div class="grade">
-            <div><label for="vLeitorMaior">Maior</label><input type="text" id="vLeitorMaior" inputmode="numeric" maxlength="13" autocomplete="off" placeholder="Leia a etiqueta"></div>
-            <div><label for="vLeitorMenor">Menor</label><input type="text" id="vLeitorMenor" inputmode="numeric" maxlength="13" autocomplete="off" placeholder="Leia a etiqueta"></div>
-          </div>
-          <div class="msg" id="vMsgRegistro" hidden></div>
-          <div class="v-exato" id="vRegistro" hidden></div>
         </section>
       </div>
     </div>

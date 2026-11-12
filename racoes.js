@@ -71,6 +71,18 @@ const nfPeso = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 3, maximu
 // Cada ração pode ter 2 pacotes de referência (maior e menor), registrados pelo peso da etiqueta da balança.
 // O valor de cada pacote = valor do quilo x peso.
 const totalDe = (preco, kg) => Math.round(preco * kg * 100) / 100;
+function tileGranel(kg, total) {
+  const t = document.createElement("div");
+  t.className = "pacote";
+  const k = document.createElement("span");
+  k.className = "pk-kg";
+  k.textContent = `${nfPeso.format(kg)} kg`;
+  const v = document.createElement("span");
+  v.className = "pk-valor";
+  v.textContent = brl.format(total);
+  t.append(k, v);
+  return t;
+}
 function textoOpcoes(preco, pac) {
   return [pac.a, pac.b].filter((kg) => kg > 0 && preco > 0)
     .map((kg) => `${nfPeso.format(kg)} kg: ${brl.format(totalDe(preco, kg))}`).join(" · ");
@@ -176,14 +188,17 @@ function desenharQualidade(valor) {
 }
 
 async function mostrarPrecoRacao(id) {
-  const el = $("precoRacao");
-  el.hidden = true;
+  const card = $("cartaoGranel");
+  card.hidden = true;
   const precos = await obterPrecos();
   const v = precoDe(precos, id);
-  if ($("codigoRacao").textContent === id && v > 0) {
-    el.textContent = [`${brl.format(v)}/kg`, textoOpcoes(v, pacotesDe(precos, id))].filter(Boolean).join("\n");
-    el.hidden = false;
-  }
+  if ($("codigoRacao").textContent !== id || !(v > 0)) return;
+  const pac = pacotesDe(precos, id);
+  $("granelKg").textContent = `${brl.format(v)} o quilo`;
+  const box = $("granelPacotes");
+  box.replaceChildren();
+  [pac.a, pac.b].filter((kg) => kg > 0).forEach((kg) => box.append(tileGranel(kg, totalDe(v, kg))));
+  card.hidden = false;
 }
 
 function desenharRacao(id, d) {
@@ -664,8 +679,13 @@ function criarCard(r, it, aoClicar) {
     if (c && valorVisivel(v)) partes.push(`${c.l}: ${formatar(c, v)}`);
   }
   a.append(nome, meta);
-  const opcoes = r.pm > 0 && r.pk ? textoOpcoes(r.pm, r.pk) : "";
-  if (opcoes) a.append(linhaEl("ib-niveis", opcoes));
+  const pacs = r.pm > 0 && r.pk ? [r.pk.a, r.pk.b].filter((kg) => kg > 0) : [];
+  if (pacs.length) {
+    const box = document.createElement("div");
+    box.className = "ib-pacotes";
+    pacs.forEach((kg) => box.append(tileGranel(kg, totalDe(r.pm, kg))));
+    a.append(box);
+  }
   if (partes.length) {
     const res = document.createElement("div");
     res.className = "ib-niveis";
@@ -1000,7 +1020,7 @@ async function aoMudarUsuario(user) {
   // painel de valores: qualquer conta logada pesquisa; só a conta de preços cadastra
   $("vLogin").hidden = !!user;
   $("vPainel").hidden = !user;
-  $("vEscrita").hidden = !(user && user.uid === UID_PRECOS);
+  document.querySelectorAll(".so-precos").forEach((s) => { s.hidden = !(user && user.uid === UID_PRECOS); });
   $("loginSenha").value = "";
   $("vSenha").value = "";
   mostrar($("msgLogin"), user && !ehAdm ? "Esta conta não tem acesso ao painel de rações. Use o botão Valores." : "", true);
