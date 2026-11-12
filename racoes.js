@@ -194,6 +194,7 @@ async function mostrarPrecoRacao(id) {
   const v = precoDe(precos, id);
   if ($("codigoRacao").textContent !== id || !(v > 0)) return;
   const pac = pacotesDe(precos, id);
+  if (!(pac.a > 0 || pac.b > 0)) return; // sem pacote cadastrado: não mostra o cartão
   $("granelKg").textContent = `${brl.format(v)} o quilo`;
   const box = $("granelPacotes");
   box.replaceChildren();
