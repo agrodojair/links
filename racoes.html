@@ -500,7 +500,7 @@
 
         <section id="vEscrita" hidden>
           <h3>Cadastrar valores</h3>
-          <p class="dica">Importe a planilha (CSV com código, descrição e preço por kg, ou JSON). O valor antigo de cada código é substituído pelo novo; valor 0 remove.</p>
+          <p class="dica">Importe a planilha (CSV: código, descrição, valor do quilo e, se houver, o 2º valor; ou JSON). Cada ração aceita até 2 valores (o maior aparece primeiro, em qualquer ordem). Os valores antigos de cada código são substituídos; valor 0 remove.</p>
           <label for="vArquivo">Arquivo CSV ou JSON</label>
           <input type="file" id="vArquivo" accept=".csv,.json,.txt,application/json,text/csv">
           <div class="linha-botoes"><button type="button" id="vImportar">Importar valores</button></div>
@@ -508,6 +508,7 @@
             <div class="grade">
               <div><label for="vCod">Código</label><input type="text" id="vCod" inputmode="numeric" maxlength="8" placeholder="Ex: 0165"></div>
               <div><label for="vPreco">Valor do quilo (R$)</label><input type="text" id="vPreco" inputmode="decimal" placeholder="Ex: 9,90"></div>
+              <div><label for="vPreco2">2º valor do quilo (opcional)</label><input type="text" id="vPreco2" inputmode="decimal" placeholder="Ex: 4,95"></div>
             </div>
             <div class="linha-botoes"><button type="submit">Salvar valor</button></div>
           </form>
