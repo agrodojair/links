@@ -67,11 +67,14 @@ const especieValida = (v) => typeof v === "string" && Object.prototype.hasOwnPro
 const $ = (id) => document.getElementById(id);
 const nf = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 4 });
 const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
-// Cada ração pode ter 2 valores por quilo (o maior e o menor). Para mostrar um nome ao lado de cada um
-// no painel, troque os textos abaixo (ex.: "Normal" e "À vista").
-const ROTULO_MAIOR = "Valor maior";
-const ROTULO_MENOR = "Valor menor";
-const textoValores = (maior, menor) => [maior, menor].filter((v) => v > 0).map((v) => `${brl.format(v)}/kg`).join(" · ");
+const nfPeso = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+// Cada ração pode ter 2 pacotes de referência (maior e menor), registrados pelo peso da etiqueta da balança.
+// O valor de cada pacote = valor do quilo x peso.
+const totalDe = (preco, kg) => Math.round(preco * kg * 100) / 100;
+function textoOpcoes(preco, pac) {
+  return [pac.a, pac.b].filter((kg) => kg > 0 && preco > 0)
+    .map((kg) => `${nfPeso.format(kg)} kg: ${brl.format(totalDe(preco, kg))}`).join(" · ");
+}
 const CAMPO_PRECO = { k: "preco", l: "Preço por kg", u: "R$/kg" };
 const campoDe = (k) => (k === "preco" ? CAMPO_PRECO : CAMPOS.find((c) => c.k === k));
 
@@ -175,8 +178,12 @@ function desenharQualidade(valor) {
 async function mostrarPrecoRacao(id) {
   const el = $("precoRacao");
   el.hidden = true;
-  const v = valoresDe(await obterPrecos(), id);
-  if ($("codigoRacao").textContent === id && v.maior > 0) { el.textContent = textoValores(v.maior, v.menor); el.hidden = false; }
+  const precos = await obterPrecos();
+  const v = precoDe(precos, id);
+  if ($("codigoRacao").textContent === id && v > 0) {
+    el.textContent = [`${brl.format(v)}/kg`, textoOpcoes(v, pacotesDe(precos, id))].filter(Boolean).join("\n");
+    el.hidden = false;
+  }
 }
 
 function desenharRacao(id, d) {
@@ -537,23 +544,23 @@ async function obterPrecos(forcar = false) {
   if (!forcar) {
     try {
       const o = JSON.parse(localStorage.getItem(PRECOS_LOCAL) || "null");
-      if (o && o.p && Date.now() - o.t <= INDICE_MIN * 60 * 1000) return (precosMem = { p: o.p, p2: o.p2 || {} });
+      if (o && o.p && Date.now() - o.t <= INDICE_MIN * 60 * 1000) return (precosMem = { p: o.p, m: o.m || {} });
     } catch (_) {}
   }
-  let dados = { p: {}, p2: {} };
+  let dados = { p: {}, m: {} };
   try {
     const snap = await getDoc(doc(db, "busca", "precos"));
-    if (snap.exists()) dados = { p: snap.data().p || {}, p2: snap.data().p2 || {} };
+    if (snap.exists()) dados = { p: snap.data().p || {}, m: snap.data().m || {} };
   } catch (e) { console.error(e); return precosMem || dados; } // sem valores, o resto do site segue funcionando
   precosMem = dados;
-  try { localStorage.setItem(PRECOS_LOCAL, JSON.stringify({ t: Date.now(), p: dados.p, p2: dados.p2 })); } catch (_) {}
+  try { localStorage.setItem(PRECOS_LOCAL, JSON.stringify({ t: Date.now(), p: dados.p, m: dados.m })); } catch (_) {}
   return dados;
 }
 
-// Os dois valores de uma ração: maior e menor (menor = 0 quando só há um)
-function valoresDe(precos, id) {
-  const a = Number(precos.p["c" + id]) || 0, b = Number(precos.p2["c" + id]) || 0;
-  return { maior: Math.max(a, b), menor: a > 0 && b > 0 ? Math.min(a, b) : 0 };
+const precoDe = (precos, id) => Number(precos.p["c" + id]) || 0;
+function pacotesDe(precos, id) {   // { a: kg do pacote maior, b: kg do pacote menor }
+  const m = precos.m["c" + id] || {};
+  return { a: Number(m.a) || 0, b: Number(m.b) || 0 };
 }
 
 function invalidarPrecos() {
@@ -579,9 +586,8 @@ async function obterIndice() {
   if (!Array.isArray(lista)) throw new Error("indice-invalido");
   const precos = await obterPrecos();
   indicePronto = prepararIndice(lista.filter((r) => r && typeof r.c === "string" && typeof r.d === "string").map((r) => {
-    const v = valoresDe(precos, r.c);
-    // a busca por valor ("até 10 reais") considera o menor dos valores da ração
-    return v.maior > 0 ? { ...r, pm: v.maior, pn: v.menor, n: { ...(r.n || {}), preco: v.menor || v.maior } } : r;
+    const v = precoDe(precos, r.c);
+    return v > 0 ? { ...r, pm: v, pk: pacotesDe(precos, r.c), n: { ...(r.n || {}), preco: v } } : r; // valor do quilo entra como "nível" pesquisável
   }));
   return indicePronto;
 }
@@ -644,7 +650,7 @@ function criarCard(r, it, aoClicar) {
   if (r.pm > 0) {
     const pr = document.createElement("span");
     pr.className = "ib-preco";
-    pr.textContent = textoValores(r.pm, r.pn);
+    pr.textContent = `${brl.format(r.pm)}/kg`;
     meta.append(pr);
   }
 
@@ -658,6 +664,8 @@ function criarCard(r, it, aoClicar) {
     if (c && valorVisivel(v)) partes.push(`${c.l}: ${formatar(c, v)}`);
   }
   a.append(nome, meta);
+  const opcoes = r.pm > 0 && r.pk ? textoOpcoes(r.pm, r.pk) : "";
+  if (opcoes) a.append(linhaEl("ib-niveis", opcoes));
   if (partes.length) {
     const res = document.createElement("div");
     res.className = "ib-niveis";
@@ -1050,8 +1058,6 @@ $("abrirValores").addEventListener("click", abrirValores);
 document.querySelectorAll("[data-fechar-valores]").forEach((b) => b.addEventListener("click", fecharValores));
 document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("valores").hidden) fecharValores(); });
 
-const nfPeso = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 3, maximumFractionDigits: 3 });
-
 // Código de balança (EAN-13): 2 + código da ração (4) + peso em gramas (7) + dígito verificador
 function lerBarras(txt) {
   const d = [...txt].map(Number);
@@ -1073,18 +1079,21 @@ async function mostrarExato(id, kg) {
   box.replaceChildren();
   let lista = [];
   try { lista = await obterIndice(); } catch (_) { /* sem índice: mostra só os valores */ }
-  const v = valoresDe(await obterPrecos(), id);
+  const precos = await obterPrecos();
+  const preco = precoDe(precos, id);
   const r = lista.find((x) => x.c === id);
   box.append(linhaEl("ve-nome", r ? r.d : `Código ${id} (ração não encontrada)`));
   box.append(linhaEl("ve-linha", `Código ${id}`));
-  if (!(v.maior > 0)) {
+  if (!(preco > 0)) {
     box.append(linhaEl("ve-linha ve-aviso", "Sem valor cadastrado para este código."));
   } else {
-    if (kg) box.append(linhaEl("ve-linha", `Peso: ${nfPeso.format(kg)} kg`));
-    [[ROTULO_MAIOR, v.maior], [ROTULO_MENOR, v.menor]].filter(([, x]) => x > 0).forEach(([rot, x]) => {
-      box.append(linhaEl("ve-linha", `${rot}: ${brl.format(x)}/kg`));
-      if (kg) box.append(linhaEl("ve-total", brl.format(Math.round(x * kg * 100) / 100)));
-    });
+    box.append(linhaEl("ve-linha", `Valor do quilo: ${brl.format(preco)}`));
+    const ops = textoOpcoes(preco, pacotesDe(precos, id));
+    if (ops) box.append(linhaEl("ve-linha", `Pacotes registrados: ${ops}`));
+    if (kg) {
+      box.append(linhaEl("ve-linha", `Peso: ${nfPeso.format(kg)} kg`));
+      box.append(linhaEl("ve-total", brl.format(totalDe(preco, kg))));
+    }
   }
   box.hidden = false;
 }
@@ -1133,50 +1142,37 @@ function dividirCsv(linha, d) {
   return out;
 }
 
-const valorOuNulo = (v) => (typeof v === "number" ? v : String(v ?? "").trim() === "" ? null : numeroBR(v));
 const ehNumeroBR = (s) => /^\s*[\d.,]+\s*$/.test(String(s));
 
-// Aceita JSON ({"0165": 9.9}, {"0165": [9.9, 4.95]}, {"0165": {maior, menor}}) ou CSV
-// (código; descrição; valor maior; valor menor — o 2º valor é opcional)
+// Aceita JSON ({"0165": 9.9} ou [{codigo, preco}]) ou CSV (código; descrição; valor do quilo)
 function lerPrecos(texto) {
   const t = texto.replace(/^\uFEFF/, "").trim();
-  const bruto = []; // [código, valor A, valor B]
+  const bruto = [];
   if (t.startsWith("{") || t.startsWith("[")) {
     const dados = JSON.parse(t);
-    const par = (v) => (Array.isArray(v) ? [v[0], v[1]] : v && typeof v === "object" ? [v.maior ?? v.preco ?? v.valor, v.menor ?? v.preco2] : [v, null]);
-    if (Array.isArray(dados)) dados.forEach((x) => bruto.push([x.codigo ?? x.cod, ...par(x)]));
-    else Object.entries(dados).forEach(([c, v]) => bruto.push([c, ...par(v)]));
+    if (Array.isArray(dados)) dados.forEach((x) => bruto.push([x.codigo ?? x.cod, x.preco ?? x.valor]));
+    else Object.entries(dados).forEach(([c, v]) => bruto.push([c, v]));
   } else {
     const linhas = t.split(/\r?\n/).filter((l) => l.trim());
     const d = (linhas[0] || "").includes(";") ? ";" : ",";
-    for (const l of linhas) {
-      const c = dividirCsv(l, d), n = c.length;
-      const dois = n >= 3 && ehNumeroBR(c[n - 2]) && n - 2 > 0; // as duas últimas colunas são valores
-      bruto.push([c[0], dois ? c[n - 2] : c[n - 1], dois ? c[n - 1] : null]);
-    }
+    for (const l of linhas) { const c = dividirCsv(l, d); bruto.push([c[0], c[c.length - 1]]); }
   }
   const mapa = {}; let ignoradas = 0;
-  for (const [c, a, b] of bruto) {
+  for (const [c, v] of bruto) {
     const m = /^\s*(\d+)/.exec(String(c ?? ""));         // "0379 / 91444042" vale como 0379
     const id = m && normalizarCodigo(m[1]);
-    const x = valorOuNulo(a), y = valorOuNulo(b);
-    const vals = [x, y].filter((v) => v !== null);
-    if (!id || !vals.length || vals.some((v) => !Number.isFinite(v) || v < 0 || v > 100000)) { ignoradas++; continue; }
-    const [maior, menor] = vals.sort((p, q) => q - p); // o maior sempre primeiro
-    mapa[id] = { maior, menor: menor || 0 };
+    const preco = typeof v === "number" ? v : numeroBR(v ?? "");
+    if (!id || !Number.isFinite(preco) || preco < 0 || preco > 100000) { ignoradas++; continue; }
+    mapa[id] = preco;
   }
   return { mapa, ignoradas };
 }
 
-// Substitui os valores antigos pelos novos, código a código (maior 0 remove os dois; sem 2º valor, remove o menor)
+// Substitui o valor antigo pelo novo, código a código (valor 0 remove)
 async function gravarPrecos(mapa) {
-  const p = {}, p2 = {};
-  const arred = (v) => Math.round(v * 100) / 100;
-  for (const [id, v] of Object.entries(mapa)) {
-    p["c" + id] = v.maior > 0 ? arred(v.maior) : deleteField();
-    p2["c" + id] = v.maior > 0 && v.menor > 0 ? arred(v.menor) : deleteField();
-  }
-  await setDoc(doc(db, "busca", "precos"), { p, p2, atualizadoEm: serverTimestamp() }, { merge: true });
+  const p = {};
+  for (const [id, v] of Object.entries(mapa)) p["c" + id] = v > 0 ? Math.round(v * 100) / 100 : deleteField();
+  await setDoc(doc(db, "busca", "precos"), { p, atualizadoEm: serverTimestamp() }, { merge: true });
   invalidarPrecos();
 }
 
@@ -1195,7 +1191,7 @@ $("vImportar").addEventListener("click", async () => {
     if (!n) throw new Error("Nenhum valor válido encontrado no arquivo.");
     await gravarPrecos(mapa);
     $("vArquivo").value = "";
-    mostrar($("vMsgEscrita"), `${n} códigos gravados (os valores antigos foram substituídos).${ignoradas ? ` ${ignoradas} linha(s) ignorada(s).` : ""}`);
+    mostrar($("vMsgEscrita"), `${n} valores gravados (os antigos foram substituídos).${ignoradas ? ` ${ignoradas} linha(s) ignorada(s).` : ""}`);
   } catch (err) {
     console.error(err);
     mostrar($("vMsgEscrita"), erroPrecos(err), true);
@@ -1207,21 +1203,73 @@ $("vImportar").addEventListener("click", async () => {
 $("vFormAdd").addEventListener("submit", async (e) => {
   e.preventDefault();
   const id = normalizarCodigo($("vCod").value);
-  const x = valorOuNulo($("vPreco").value), y = valorOuNulo($("vPreco2").value);
-  const vals = [x, y].filter((v) => v !== null);
-  if (!id || !vals.length || vals.some((v) => !Number.isFinite(v) || v < 0 || v > 100000)) {
-    return mostrar($("vMsgEscrita"), "Informe um código e pelo menos um valor por quilo válido.", true);
-  }
-  const [maior, menor] = vals.sort((p, q) => q - p);
+  const preco = numeroBR($("vPreco").value);
+  if (!id || !Number.isFinite(preco) || preco < 0 || preco > 100000) return mostrar($("vMsgEscrita"), "Informe um código e um valor por quilo válidos.", true);
   try {
-    await gravarPrecos({ [id]: { maior, menor: menor || 0 } });
+    await gravarPrecos({ [id]: preco });
     $("vFormAdd").reset();
-    mostrar($("vMsgEscrita"), maior > 0 ? `Ração ${id}: ${textoValores(maior, menor || 0)}.` : `Valores da ração ${id} removidos.`);
+    mostrar($("vMsgEscrita"), preco > 0 ? `Valor da ração ${id} atualizado para ${brl.format(preco)}/kg.` : `Valor da ração ${id} removido.`);
   } catch (err) {
     console.error(err);
     mostrar($("vMsgEscrita"), erroPrecos(err), true);
   }
 });
+
+/* ----- registro dos pacotes (maior e menor) pelo leitor de código de barras da balança ----- */
+// Campo "Maior": lê a etiqueta, guarda o peso, limpa o campo e pula para "Menor". Campo "Menor": guarda,
+// limpa e volta para "Maior". Etiqueta de OUTRA ração (código diferente da atual): apaga os dois pesos
+// antigos dessa ração e registra o novo.
+let registro = { id: "", a: 0, b: 0 };
+let filaRegistro = Promise.resolve();
+
+async function mostrarRegistro() {
+  const box = $("vRegistro");
+  box.replaceChildren();
+  let nome = "";
+  try { nome = (await obterIndice()).find((x) => x.c === registro.id)?.d || ""; } catch (_) {}
+  const preco = precoDe(await obterPrecos(true), registro.id);
+  box.append(linhaEl("ve-nome", nome || `Código ${registro.id}`));
+  box.append(linhaEl("ve-linha", `Código ${registro.id}${preco > 0 ? ` · ${brl.format(preco)}/kg` : " · sem valor do quilo cadastrado"}`));
+  for (const [rot, kg] of [["Maior", registro.a], ["Menor", registro.b]]) {
+    box.append(linhaEl("ve-linha", kg > 0
+      ? `${rot}: ${nfPeso.format(kg)} kg${preco > 0 ? ` = ${brl.format(totalDe(preco, kg))}` : ""}`
+      : `${rot}: aguardando leitura`));
+  }
+  box.hidden = false;
+}
+
+async function registrarPacote(slot, texto) { // slot "a" = maior, "b" = menor
+  const entrada = $(slot === "a" ? "vLeitorMaior" : "vLeitorMenor");
+  const proximo = $(slot === "a" ? "vLeitorMenor" : "vLeitorMaior");
+  const t = texto.trim();
+  entrada.value = ""; // limpa o campo lido
+  const msg = (m, erro) => mostrar($("vMsgRegistro"), m, erro);
+  if (!/^\d{13}$/.test(t)) { msg("Leia o código de barras da balança (13 dígitos).", true); entrada.focus(); return; }
+  const b = lerBarras(t);
+  if (b.erro) { msg(b.erro, true); entrada.focus(); return; }
+  if (!(b.kg > 0)) { msg("A etiqueta lida está com peso zero.", true); entrada.focus(); return; }
+  if (b.id !== registro.id) registro = { id: b.id, a: 0, b: 0 }; // outra ração: começa do zero
+  registro[slot] = b.kg;
+  try {
+    const par = {};
+    for (const s of ["a", "b"]) par[s] = registro[s] > 0 ? registro[s] : deleteField();
+    await setDoc(doc(db, "busca", "precos"), { m: { ["c" + registro.id]: par }, atualizadoEm: serverTimestamp() }, { merge: true });
+    invalidarPrecos();
+    msg(registro.a > 0 && registro.b > 0 && registro.a < registro.b ? "Atenção: o peso do Maior está menor que o do Menor." : "", true);
+    await mostrarRegistro();
+  } catch (err) {
+    console.error(err);
+    msg(erroPrecos(err), true);
+  }
+  proximo.focus(); // Maior -> Menor, Menor -> Maior
+}
+
+for (const [id, slot] of [["vLeitorMaior", "a"], ["vLeitorMenor", "b"]]) {
+  const el = $(id);
+  const enviar = () => { const v = el.value; if (v) filaRegistro = filaRegistro.then(() => registrarPacote(slot, v)); };
+  el.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); enviar(); } });
+  el.addEventListener("input", () => { if (/^\d{13}$/.test(el.value.trim())) enviar(); }); // leitores que não enviam Enter
+}
 
 /* ----- validação (usada no formulário e na importação) ----- */
 function montarRegistro(codigo, descricao, imagem, n, composicao, qualidade, especie) {
